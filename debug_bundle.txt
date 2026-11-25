@@ -1,0 +1,3968 @@
+﻿=== FILE: package.json ===
+{
+  "name": "trading-war-room",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lightweight-charts": "^5.3.0",
+    "lucide-react": "^1.80.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.90.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.6"
+  }
+}
+
+
+=== FILE: vite.config.ts ===
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/bitunix-api': {
+        target: 'https://fapi.bitunix.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bitunix-api/, ''),
+      },
+    },
+  },
+});
+
+
+=== FILE: index.html ===
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trading-war-room</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\App.css ===
+.counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+  margin-bottom: 24px;
+
+  &:hover {
+    border-color: var(--accent-border);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.hero {
+  position: relative;
+
+  .base,
+  .framework,
+  .vite {
+    inset-inline: 0;
+    margin: 0 auto;
+  }
+
+  .base {
+    width: 170px;
+    position: relative;
+    z-index: 0;
+  }
+
+  .framework,
+  .vite {
+    position: absolute;
+  }
+
+  .framework {
+    z-index: 1;
+    top: 34px;
+    height: 28px;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
+      scale(1.4);
+  }
+
+  .vite {
+    z-index: 0;
+    top: 107px;
+    height: 26px;
+    width: auto;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
+      scale(0.8);
+  }
+}
+
+#center {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  place-content: center;
+  place-items: center;
+  flex-grow: 1;
+
+  @media (max-width: 1024px) {
+    padding: 32px 20px 24px;
+    gap: 18px;
+  }
+}
+
+#next-steps {
+  display: flex;
+  border-top: 1px solid var(--border);
+  text-align: left;
+
+  & > div {
+    flex: 1 1 0;
+    padding: 32px;
+    @media (max-width: 1024px) {
+      padding: 24px 20px;
+    }
+  }
+
+  .icon {
+    margin-bottom: 16px;
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+#docs {
+  border-right: 1px solid var(--border);
+
+  @media (max-width: 1024px) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+#next-steps ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  margin: 32px 0 0;
+
+  .logo {
+    height: 18px;
+  }
+
+  a {
+    color: var(--text-h);
+    font-size: 16px;
+    border-radius: 6px;
+    background: var(--social-bg);
+    display: flex;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: box-shadow 0.3s;
+
+    &:hover {
+      box-shadow: var(--shadow);
+    }
+    .button-icon {
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    li {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    a {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+  }
+}
+
+#spacer {
+  height: 88px;
+  border-top: 1px solid var(--border);
+  @media (max-width: 1024px) {
+    height: 48px;
+  }
+}
+
+.ticks {
+  position: relative;
+  width: 100%;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4.5px;
+    border: 5px solid transparent;
+  }
+
+  &::before {
+    left: 0;
+    border-left-color: var(--border);
+  }
+  &::after {
+    right: 0;
+    border-right-color: var(--border);
+  }
+}
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\App.tsx ===
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import {
+  Eye, EyeOff, Plus, Trash2, Code2, Play, Pause, Layers,
+  PanelRightClose, PanelRightOpen, X, Flag,
+  MousePointer2, TrendingUp, Minus, Square, Percent, ArrowUpCircle, ArrowDownCircle,
+  Magnet, Bookmark, Settings2, BarChartHorizontal, Waypoints, Lock, Unlock,
+  Type, Scissors, StepForward, Shuffle
+} from 'lucide-react';
+import {
+  ChartCanvas,
+  DEFAULT_FIBO_LEVELS,
+  DEFAULT_POS_CONFIG,
+  DEFAULT_FRVP_CONFIG,
+  type DrawingItem,
+  type DrawingToolType,
+  type FiboLevel,
+  type PositionConfig,
+  type FrvpConfig,
+} from './ChartCanvas';
+import { DEFAULT_INDICATORS, DEFAULT_MULTILEVEL_CONFIG, runIndicatorScript, type IndicatorOutput, type IndicatorScript } from './indicatorEngine';
+import { TIMEFRAMES, useMarketData, type TimeframeOption } from './useMarketData';
+import { FLAG_DEFS, WatchlistPanel, type FlagColor } from './WatchlistPanel';
+import { DrawingSettingsModal } from './DrawingSettingsModal';
+import { IndicatorSettingsModal } from './IndicatorSettingsModal';
+import { TopbarCountdownBadge, PriceAxisCountdownTag } from './CandleCountdownBadge';
+
+interface DrawingTemplate {
+  id: string;
+  name: string;
+  targetType: 'fibo' | 'rect' | 'trendline' | 'frvp' | 'path' | 'text';
+  color: string;
+  fillColor?: string;
+  dashed?: boolean;
+  extendRight?: boolean;
+  arrowEnd?: boolean;
+  fiboLevels?: FiboLevel[];
+  frvpConfig?: FrvpConfig;
+}
+
+const DEFAULT_TEMPLATES: DrawingTemplate[] = [
+  { id: 'tpl_kuang', name: '框法', targetType: 'rect', color: '#2962ff', fillColor: 'rgba(41, 98, 255, 0.18)' },
+  { id: 'tpl_poi', name: 'POI', targetType: 'rect', color: '#9c27b0', fillColor: 'rgba(156, 39, 176, 0.20)' },
+  { id: 'tpl_sweep', name: 'Sweep', targetType: 'trendline', color: '#ff9800', dashed: true },
+  { id: 'tpl_fibo_std', name: 'fibo (預設)', targetType: 'fibo', color: '#787b86', fiboLevels: DEFAULT_FIBO_LEVELS },
+  { id: 'tpl_ote', name: 'OTE (0.618 - 0.79)', targetType: 'fibo', color: '#2962ff', fiboLevels: DEFAULT_FIBO_LEVELS.map((lv) => ({ ...lv, enabled: [0, 0.5, 0.618, 0.705, 0.79, 1].includes(lv.value) })) },
+  { id: 'tpl_frvp_200', name: 'FRVP (200行 / 70%)', targetType: 'frvp', color: '#00bcd4', frvpConfig: DEFAULT_FRVP_CONFIG },
+];
+
+function loadInitialIndicators(): IndicatorScript[] {
+  try {
+    const raw = localStorage.getItem('warroom_indicators_v2');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((item: IndicatorScript) =>
+          item.id === 'ind_structure_v6' && !item.uiType
+            ? { ...item, uiType: 'multilevel', multiLevelConfig: DEFAULT_MULTILEVEL_CONFIG }
+            : item
+        );
+      }
+    }
+  } catch {}
+  return DEFAULT_INDICATORS;
+}
+
+export function App() {
+  const [symbol, setSymbol] = useState('BTCUSDT');
+  const [tf, setTf] = useState<TimeframeOption>(TIMEFRAMES[3]);
+  const [replaySelecting, setReplaySelecting] = useState(false);
+  const [replayCutoffTime, setReplayCutoffTime] = useState<number | null>(null);
+  const [replayPlaying, setReplayPlaying] = useState(false);
+  const [replaySpeedMs, setReplaySpeedMs] = useState(600);
+  const { allSymbols, bars, barsHTF, mtfBarsMap, loadingBars, tickersMap, refreshingPairs, fetchAllSymbols, loadMoreHistory, fetch3dPool } = useMarketData(symbol, tf, replayCutoffTime);
+
+  // 回放狀態已置頂與 useMarketData 歷史時光機連動
+
+  const [activeTool, setActiveTool] = useState<DrawingToolType>('cursor');
+  const [magnetEnabled, setMagnetEnabled] = useState(true);
+  const [drawings, setDrawings] = useState<DrawingItem[]>(() => {
+    try { return JSON.parse(localStorage.getItem('warroom_drawings_v1') || '[]'); } catch { return []; }
+  });
+  const [selectedDrawingId, setSelectedDrawingId] = useState<string | null>(null);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [tplMenuOpen, setTplMenuOpen] = useState(false);
+  const [templates, setTemplates] = useState<DrawingTemplate[]>(() => {
+    try {
+      const saved = localStorage.getItem('warroom_templates_v1');
+      if (saved) {
+        const p = JSON.parse(saved);
+        if (Array.isArray(p) && p.length > 0) return p;
+      }
+    } catch {}
+    return DEFAULT_TEMPLATES;
+  });
+  const [defaultFiboLevels, setDefaultFiboLevels] = useState<FiboLevel[]>(DEFAULT_FIBO_LEVELS);
+  const [defaultPosConfig, setDefaultPosConfig] = useState<PositionConfig>(() => {
+    try {
+      const saved = localStorage.getItem('warroom_poscfg_v1');
+      return saved ? JSON.parse(saved) : DEFAULT_POS_CONFIG;
+    } catch { return DEFAULT_POS_CONFIG; }
+  });
+  const [defaultFrvpConfig, setDefaultFrvpConfig] = useState<FrvpConfig>(DEFAULT_FRVP_CONFIG);
+
+  const [flagsMap, setFlagsMap] = useState<Record<string, FlagColor>>(() => {
+    try {
+      const saved = localStorage.getItem('warroom_flags_v1');
+      return saved ? JSON.parse(saved) : { BTCUSDT: 'red', ETHUSDT: 'red' };
+    } catch { return { BTCUSDT: 'red', ETHUSDT: 'red' }; }
+  });
+  const [wlOpen, setWlOpen] = useState(true);
+
+  const [indicators, setIndicators] = useState<IndicatorScript[]>(loadInitialIndicators);
+  const [activeEditId, setActiveEditId] = useState<string>(() => loadInitialIndicators()[0]?.id || '');
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [indSettingsId, setIndSettingsId] = useState<string | null>(null);
+  const [indPanelCollapsed, setIndPanelCollapsed] = useState<boolean>(() => localStorage.getItem("warroom_ind_collapsed") === "1");
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // 若指標被全刪空，自動還原預設指標避免 0/0
+  useEffect(() => {
+    if (indicators.length === 0) {
+      setIndicators(DEFAULT_INDICATORS);
+      setActiveEditId(DEFAULT_INDICATORS[0].id);
+      return;
+    }
+    if (!indicators.some((i) => i.id === activeEditId)) {
+      setActiveEditId(indicators[0].id);
+    }
+    localStorage.setItem('warroom_indicators_v2', JSON.stringify(indicators));
+  }, [indicators, activeEditId]);
+
+  useEffect(() => { localStorage.setItem('warroom_flags_v1', JSON.stringify(flagsMap)); }, [flagsMap]);
+  useEffect(() => { localStorage.setItem('warroom_drawings_v1', JSON.stringify(drawings)); }, [drawings]);
+  useEffect(() => { localStorage.setItem('warroom_templates_v1', JSON.stringify(templates)); }, [templates]);
+  useEffect(() => { localStorage.setItem('warroom_poscfg_v1', JSON.stringify(defaultPosConfig)); }, [defaultPosConfig]);
+
+  // 只有「切換幣種 (symbol)」才重置回放；「切換時間週期 (tf)」時保留回放時間錨點，方便 4H 切 15m 分析
+  useEffect(() => {
+    setReplaySelecting(false);
+    setReplayCutoffTime(null);
+    setReplayPlaying(false);
+  }, [symbol]);
+
+  useEffect(() => {
+    setReplaySelecting(false);
+    setReplayPlaying(false);
+  }, [tf]);
+
+  const visibleBars = useMemo(() => {
+    if (replayCutoffTime === null) return bars;
+    const sliced = bars.filter((b) => b.time <= replayCutoffTime);
+    return sliced.length > 0 ? sliced : bars.slice(0, Math.min(20, bars.length));
+  }, [bars, replayCutoffTime]);
+
+  const visibleBarsHTF = useMemo(() => {
+    if (replayCutoffTime === null) return barsHTF;
+    return barsHTF.filter((b) => b.time <= replayCutoffTime);
+  }, [barsHTF, replayCutoffTime]);
+
+  const visibleMtfMap = useMemo(() => {
+    if (replayCutoffTime === null) return mtfBarsMap;
+    const slicedMap: Record<string, typeof bars> = {};
+    for (const [k, list] of Object.entries(mtfBarsMap)) {
+      slicedMap[k] = list.filter((b) => b.time <= replayCutoffTime);
+    }
+    return slicedMap;
+  }, [mtfBarsMap, replayCutoffTime]);
+
+    // 隨機 K：從 3D (三日線) 跨年完整歷史池防重複抽樣 + 盤中隨機時段偏移，切到任何小週期自動時光機對齊
+  const used3dIndicesRef = useRef<number[]>([]);
+  const handleRandomReplay = useCallback(async () => {
+    const pool3d = await fetch3dPool(symbol);
+    if (pool3d.length < 25) return;
+
+    const minIdx = Math.min(20, Math.floor(pool3d.length * 0.1));
+    const maxIdx = Math.max(minIdx + 1, pool3d.length - 8);
+    const totalCandidates = maxIdx - minIdx;
+
+    let candidates = Array.from({ length: totalCandidates }, (_, i) => minIdx + i)
+      .filter((idx) => !used3dIndicesRef.current.includes(idx));
+    if (candidates.length === 0) {
+      used3dIndicesRef.current = [];
+      candidates = Array.from({ length: totalCandidates }, (_, i) => minIdx + i);
+    }
+
+    const pickedIdx = candidates[Math.floor(Math.random() * candidates.length)];
+    used3dIndicesRef.current = [...used3dIndicesRef.current.slice(-29), pickedIdx];
+
+    const base3dTime = pool3d[pickedIdx].time;
+    const intradayOffset = Math.floor(Math.random() * 288) * 900;
+    const nowSec = Math.floor(Date.now() / 1000) - 3600;
+    const finalAnchorTime = Math.min(nowSec, base3dTime + intradayOffset);
+
+    setActiveTool('cursor');
+    setReplaySelecting(false);
+    setReplayPlaying(false);
+    setReplayCutoffTime(finalAnchorTime);
+    setTimeout(() => {
+      chartRef.current?.timeScale().scrollToRealTime();
+    }, 80);
+  }, [symbol, fetch3dPool]);
+
+  const stepReplayForward = useCallback(() => {
+    if (replayCutoffTime === null || bars.length === 0) return;
+    const nextBar = bars.find((b) => b.time > replayCutoffTime);
+    if (nextBar) {
+      setReplayCutoffTime(nextBar.time);
+    } else {
+      setReplayPlaying(false);
+      setReplayCutoffTime(null);
+    }
+  }, [replayCutoffTime, bars]);
+
+  useEffect(() => {
+    if (!replayPlaying || replayCutoffTime === null) return;
+    const timer = setInterval(stepReplayForward, replaySpeedMs);
+    return () => clearInterval(timer);
+  }, [replayPlaying, replayCutoffTime, replaySpeedMs, stepReplayForward]);
+
+  const selectedDrawing = useMemo(() => drawings.find((d) => d.id === selectedDrawingId) || null, [drawings, selectedDrawingId]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedDrawingId) {
+        if (selectedDrawing?.locked) return;
+        setDrawings((prev) => prev.filter((d) => d.id !== selectedDrawingId));
+        setSelectedDrawingId(null);
+        setSettingsModalOpen(false);
+      } else if (e.key === 'ArrowRight' && replayCutoffTime !== null) {
+        e.preventDefault();
+        stepReplayForward();
+      } else if (e.key === 'Escape') {
+        setActiveTool('cursor');
+        setReplaySelecting(false);
+        setSelectedDrawingId(null);
+        setSettingsModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedDrawingId, selectedDrawing, replayCutoffTime, stepReplayForward]);
+
+  useEffect(() => {
+    const t = setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    return () => clearTimeout(t);
+  }, [wlOpen, editorOpen]);
+
+  const [indicatorOutputs, setIndicatorOutputs] = useState<IndicatorOutput[]>([]);
+  const lastCalcTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (visibleBars.length === 0) { setIndicatorOutputs([]); return; }
+    const now = Date.now();
+    const delay = (replayCutoffTime !== null || now - lastCalcTimeRef.current >= 250) ? 0 : 250 - (now - lastCalcTimeRef.current);
+
+    const timer = setTimeout(() => {
+      lastCalcTimeRef.current = Date.now();
+      const results: IndicatorOutput[] = [];
+      let err = '';
+      for (const ind of indicators) {
+        if (!ind.enabled) continue;
+        try {
+          results.push(runIndicatorScript(ind, visibleBars, visibleBarsHTF, visibleMtfMap));
+        } catch (e: any) {
+          err = `[${ind.name}] 語法錯誤: ${e.message}`;
+        }
+      }
+      setErrorMsg(err);
+      setIndicatorOutputs(results);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [visibleBars, visibleBarsHTF, visibleMtfMap, indicators, replayCutoffTime]);
+
+  const handleUpdateDrawing = useCallback((updated: DrawingItem) => {
+    setDrawings((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+    if (updated.type === 'fibo' && updated.fiboLevels) setDefaultFiboLevels(updated.fiboLevels);
+    if ((updated.type === 'long' || updated.type === 'short') && updated.posConfig) setDefaultPosConfig(updated.posConfig);
+    if (updated.type === 'frvp' && updated.frvpConfig) setDefaultFrvpConfig(updated.frvpConfig);
+  }, []);
+
+  const handleSaveTemplate = () => {
+    if (!selectedDrawing) return;
+    const name = prompt('請輸入繪圖範本名稱：');
+    if (!name?.trim()) return;
+    setTemplates([...templates, {
+      id: `tpl_${Date.now()}`,
+      name: name.trim(),
+      targetType: selectedDrawing.type === 'fibo' ? 'fibo' : selectedDrawing.type === 'rect' ? 'rect' : selectedDrawing.type === 'frvp' ? 'frvp' : selectedDrawing.type === 'path' ? 'path' : selectedDrawing.type === 'text' ? 'text' : 'trendline',
+      color: selectedDrawing.color,
+      fillColor: selectedDrawing.fillColor,
+      dashed: selectedDrawing.dashed,
+      extendRight: selectedDrawing.extendRight,
+      arrowEnd: selectedDrawing.arrowEnd,
+      fiboLevels: selectedDrawing.fiboLevels ? JSON.parse(JSON.stringify(selectedDrawing.fiboLevels)) : undefined,
+      frvpConfig: selectedDrawing.frvpConfig ? { ...selectedDrawing.frvpConfig } : undefined,
+    }]);
+    setTplMenuOpen(false);
+  };
+
+  const handleApplyTemplate = (tpl: DrawingTemplate) => {
+    if (!selectedDrawing) return;
+    handleUpdateDrawing({
+      ...selectedDrawing,
+      color: tpl.color,
+      fillColor: tpl.fillColor ?? selectedDrawing.fillColor,
+      dashed: tpl.dashed ?? selectedDrawing.dashed,
+      extendRight: tpl.extendRight ?? selectedDrawing.extendRight,
+      arrowEnd: tpl.arrowEnd ?? selectedDrawing.arrowEnd,
+      fiboLevels: tpl.fiboLevels ? JSON.parse(JSON.stringify(tpl.fiboLevels)) : selectedDrawing.fiboLevels,
+      frvpConfig: tpl.frvpConfig ? { ...tpl.frvpConfig } : selectedDrawing.frvpConfig,
+    });
+    setTplMenuOpen(false);
+  };
+
+  const handleToggleRedFlag = useCallback((e: React.MouseEvent, sym: string) => {
+    e.stopPropagation();
+    setFlagsMap((prev) => {
+      const next = { ...prev };
+      if (next[sym]) delete next[sym];
+      else next[sym] = 'red';
+      return next;
+    });
+  }, []);
+
+  const handleSetFlagColor = useCallback((sym: string, color: FlagColor | null) => {
+    setFlagsMap((prev) => {
+      const next = { ...prev };
+      if (color === null) delete next[sym];
+      else next[sym] = color;
+      return next;
+    });
+  }, []);
+
+  const activeScript = indicators.find((i) => i.id === activeEditId);
+  const curTicker = tickersMap[symbol];
+  const curFlagHex = FLAG_DEFS.find((f) => f.id === flagsMap[symbol])?.hex;
+
+  const getDrawingTitle = (type: DrawingItem['type']) => {
+    if (type === 'text') return '文字標註';
+    if (type === 'frvp') return '固定範圍成交量 (FRVP)';
+    if (type === 'path') return '路徑 (Path)';
+    if (type === 'fibo') return '斐波那契';
+    if (type === 'long') return '多頭倉位';
+    if (type === 'short') return '空頭倉位';
+    if (type === 'rect') return '矩形框';
+    return '線段';
+  };
+
+  return (
+    <div className="flex flex-col h-screen w-screen bg-[#131722] text-[#d1d4dc] select-none overflow-hidden">
+      <header className="flex items-center justify-between h-11 px-3 border-b border-[#2a2e39] bg-[#1e222d] gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="font-bold text-white tracking-wide shrink-0">WAR ROOM</span>
+          <div className="flex items-center gap-1.5 bg-[#2a2e39] px-2.5 py-1 rounded text-xs shrink-0">
+            <button onClick={(e) => handleToggleRedFlag(e, symbol)} className="cursor-pointer hover:scale-110">
+              <Flag size={13} style={{ color: curFlagHex || '#787b86', fill: curFlagHex || 'transparent' }} />
+            </button>
+            <span className="font-bold text-white">{symbol}.P</span>
+          <TopbarCountdownBadge lastBar={visibleBars[visibleBars.length - 1]} tf={tf} hidden={visibleBars.length < bars.length} />
+            {curTicker && (
+              <span className={curTicker.priceChangePercent >= 0 ? 'text-[#26a69a]' : 'text-[#ef5350]'}>
+                {curTicker.priceChangePercent >= 0 ? '+' : ''}{curTicker.priceChangePercent.toFixed(2)}%
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-0.5 border-l border-[#2a2e39] pl-2 overflow-x-auto no-scrollbar">
+            {TIMEFRAMES.map((t) => (
+              <button key={t.label} onClick={() => setTf(t)} className={`px-2 py-1 text-xs rounded shrink-0 cursor-pointer ${tf.label === t.label ? 'bg-[#2962ff] text-white font-semibold' : 'hover:bg-[#2a2e39]'}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1 border-l border-[#2a2e39] pl-2 ml-1 shrink-0">
+            <button
+              onClick={() => {
+                if (replayCutoffTime !== null || replaySelecting) {
+                  setReplaySelecting(false);
+                  setReplayCutoffTime(null);
+                  setReplayPlaying(false);
+                } else {
+                  setActiveTool('cursor');
+                  setReplaySelecting(true);
+                }
+              }}
+              className={`flex items-center gap-1 text-xs px-2 py-1 rounded cursor-pointer ${
+                replayCutoffTime !== null || replaySelecting ? 'bg-[#2962ff] text-white font-semibold' : 'bg-[#2a2e39] hover:bg-[#363a45]'
+              }`}
+              title="手動選擇切斷點開始回放"
+            >
+              <Scissors size={13} /> <span>回放</span>
+            </button>
+            <button
+              onClick={handleRandomReplay}
+              className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-[#2a2e39] hover:bg-[#363a45] text-[#facc15] cursor-pointer"
+              title="隨機抽取歷史時間錨點盲測 (切換週期也會鎖定在同時間)"
+            >
+              <Shuffle size={12} /> <span>隨機K</span>
+            </button>
+          </div>
+
+          <span className="text-[11px] text-[#787b86] shrink-0 hidden xl:inline">{loadingBars ? '載入中...' : `${visibleBars.length} K`}</span>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              const id = `ind_${Date.now()}`;
+              setIndicators([...indicators, { id, name: `自訂指標 #${indicators.length + 1}`, enabled: true, code: `sdk.plotEMA(13, '#e91e63', 2);` }]);
+              setActiveEditId(id);
+              setEditorOpen(true);
+            }}
+            className="flex items-center gap-1 bg-[#2a2e39] hover:bg-[#363a45] text-xs px-2.5 py-1.5 rounded cursor-pointer"
+          >
+            <Plus size={14} /> 新增指標
+          </button>
+          <button onClick={() => setEditorOpen(!editorOpen)} className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded cursor-pointer ${editorOpen ? 'bg-[#2962ff] text-white' : 'bg-[#2a2e39] hover:bg-[#363a45]'}`}>
+            <Code2 size={14} /> 編輯器
+          </button>
+          <button onClick={() => setWlOpen(!wlOpen)} className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded cursor-pointer ${wlOpen ? 'bg-[#2962ff] text-white' : 'bg-[#2a2e39] hover:bg-[#363a45]'}`}>
+            {wlOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+          </button>
+        </div>
+      </header>
+
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <aside className="w-11 bg-[#1e222d] border-r border-[#2a2e39] flex flex-col items-center py-2 gap-1.5 shrink-0 z-20">
+          {[
+            { id: 'cursor', icon: MousePointer2, label: '十字游標 (Esc)' },
+            { id: 'trendline', icon: TrendingUp, label: '趨勢線' },
+            { id: 'hline', icon: Minus, label: '水平線' },
+            { id: 'path', icon: Waypoints, label: '路徑 Path (連續點擊畫折線，雙擊或右鍵完成)' },
+            { id: 'rect', icon: Square, label: '矩形框 / POI' },
+            { id: 'text', icon: Type, label: '文字標註 (Text / 筆記標籤)' },
+            { id: 'fibo', icon: Percent, label: '斐波那契回撤' },
+            { id: 'frvp', icon: BarChartHorizontal, label: '固定範圍成交量分佈圖 (FRVP)' },
+            { id: 'long', icon: ArrowUpCircle, label: '多頭倉位 (算顆數)' },
+            { id: 'short', icon: ArrowDownCircle, label: '空頭倉位 (算顆數)' },
+          ].map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <button key={tool.id} onClick={() => setActiveTool(tool.id as DrawingToolType)} className={`p-2 rounded cursor-pointer ${activeTool === tool.id ? 'bg-[#2962ff] text-white' : 'text-[#787b86] hover:bg-[#2a2e39] hover:text-white'}`} title={tool.label}>
+                <Icon size={17} />
+              </button>
+            );
+          })}
+          <div className="w-6 border-t border-[#2a2e39] my-1" />
+          <button onClick={() => setMagnetEnabled(!magnetEnabled)} className={`p-2 rounded cursor-pointer ${magnetEnabled ? 'bg-[#2a2e39] text-[#2962ff]' : 'text-[#787b86] hover:bg-[#2a2e39]'}`} title="K棒磁吸">
+          </button>
+          <button onClick={() => { if (confirm(`清除 ${symbol}.P 所有未鎖定的繪圖？`)) { setDrawings(drawings.filter((d) => d.symbol !== symbol || d.locked)); setSelectedDrawingId(null); } }} className="p-2 rounded text-[#787b86] hover:bg-[#2a2e39] hover:text-[#ef5350] cursor-pointer mt-auto" title="清除未鎖定繪圖">
+            <Trash2 size={17} />
+          </button>
+        </aside>
+
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
+          <div className="relative flex-1 min-h-0">
+            {replaySelecting && (
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-[#2962ff] text-white text-xs px-3.5 py-1.5 rounded-md shadow-xl font-semibold">
+                ✂️ 請點擊圖表上任意一根歷史 K 棒作為回放起點 (按 Esc 取消)
+              </div>
+            )}
+
+            {replayCutoffTime !== null && !replaySelecting && (
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 bg-[#1e222d]/95 backdrop-blur border border-[#2962ff] rounded-full px-4 py-1.5 shadow-2xl text-xs">
+                <span className="text-[#2962ff] font-bold">回放鎖定中</span>
+                <button
+                  onClick={() => setReplayPlaying(!replayPlaying)}
+                  className="flex items-center gap-1 bg-[#2962ff] hover:bg-[#1e53e5] text-white px-2.5 py-1 rounded-full cursor-pointer font-semibold"
+                >
+                  {replayPlaying ? <><Pause size={13} /> 暫停</> : <><Play size={13} /> 播放</>}
+                </button>
+                <button
+                  onClick={stepReplayForward}
+                  className="flex items-center gap-1 bg-[#2a2e39] hover:bg-[#363a45] text-white px-2.5 py-1 rounded-full cursor-pointer"
+                  title="前進一根 K 棒 (鍵盤 →)"
+                >
+                  <StepForward size={13} /> 下一根
+                </button>
+                <select
+                  value={replaySpeedMs}
+                  onChange={(e) => setReplaySpeedMs(Number(e.target.value))}
+                  className="bg-[#131722] text-white px-2 py-1 rounded-full border border-[#2a2e39] outline-none cursor-pointer"
+                >
+                  <option value={1200}>1x 慢速</option>
+                  <option value={600}>2x 正常</option>
+                  <option value={250}>5x 快速</option>
+                </select>
+                <button
+                  onClick={handleRandomReplay}
+                  className="flex items-center gap-1 text-[#facc15] hover:underline cursor-pointer px-1"
+                  title="隨機切換到另一個歷史位置盲測"
+                >
+                  <Shuffle size={12} /> 隨機K
+                </button>
+                <button
+                  onClick={() => { setReplayPlaying(false); setReplaySelecting(true); }}
+                  className="text-[#787b86] hover:text-white cursor-pointer px-1"
+                  title="重新手動選擇切斷位置"
+                >
+                  重切
+                </button>
+                <button
+                  onClick={() => { setReplayPlaying(false); setReplayCutoffTime(null); }}
+                  className="text-[#ef5350] hover:underline cursor-pointer pl-1 border-l border-[#2a2e39]"
+                >
+                  退出回放
+                </button>
+              </div>
+            )}
+
+            {activeTool === 'path' && (
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-[#2962ff] text-white text-xs px-3 py-1 rounded shadow-lg">
+                路徑繪製中：左鍵連續點擊添加轉折點，雙擊或按右鍵結束
+              </div>
+            )}
+
+            {selectedDrawing && activeTool === 'cursor' && !replaySelecting && (
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-[#1e222d] border border-[#363a45] rounded-md px-3 py-1.5 shadow-xl text-xs">
+                <span className="font-semibold text-white">{getDrawingTitle(selectedDrawing.type)}</span>
+
+                <button
+                  onClick={() => handleUpdateDrawing({ ...selectedDrawing, locked: !selectedDrawing.locked })}
+                  className={`flex items-center gap-1 px-2 py-1 rounded cursor-pointer ${
+                    selectedDrawing.locked ? 'bg-[#ff9800]/25 text-[#ff9800]' : 'bg-[#2a2e39] hover:bg-[#363a45] text-[#d1d4dc]'
+                  }`}
+                  title={selectedDrawing.locked ? '點擊解除鎖定' : '點擊固定位置 (防止誤拖)'}
+                >
+                  {selectedDrawing.locked ? <Lock size={12} /> : <Unlock size={12} />}
+                </button>
+
+                {!['long', 'short', 'frvp'].includes(selectedDrawing.type) && (
+                  <input type="color" value={selectedDrawing.color} onChange={(e) => handleUpdateDrawing({ ...selectedDrawing, color: e.target.value, fillColor: selectedDrawing.type === 'rect' ? `${e.target.value}2e` : undefined })} className="w-5 h-5 bg-transparent border-0 cursor-pointer" />
+                )}
+
+                <div className="relative">
+                  <button onClick={() => setTplMenuOpen(!tplMenuOpen)} className="flex items-center gap-1 bg-[#2a2e39] hover:bg-[#363a45] px-2 py-1 rounded text-white cursor-pointer">
+                    <Bookmark size={12} /> <span>範本</span>
+                  </button>
+                  {tplMenuOpen && (
+                    <div className="absolute left-0 mt-1 w-44 bg-[#1e222d] border border-[#363a45] rounded shadow-xl py-1 z-50">
+                      <button onClick={handleSaveTemplate} className="w-full text-left px-3 py-1.5 text-xs text-[#2962ff] hover:bg-[#2a2e39] font-semibold cursor-pointer">儲存繪圖範本為...</button>
+                      <div className="border-t border-[#2a2e39] my-1" />
+                      {templates.map((tpl) => (
+                        <div key={tpl.id} className="flex items-center justify-between px-3 py-1.5 text-xs hover:bg-[#2a2e39] cursor-pointer">
+                          <span onClick={() => handleApplyTemplate(tpl)} className="flex-1 text-white">{tpl.name}</span>
+                          <button onClick={() => setTemplates(templates.filter((t) => t.id !== tpl.id))} className="text-[#787b86] hover:text-[#ef5350]"><X size={11} /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button onClick={() => setSettingsModalOpen(true)} className="flex items-center gap-1 bg-[#2962ff] hover:bg-[#1e53e5] text-white px-2.5 py-1 rounded cursor-pointer">
+                  <Settings2 size={12} /> <span>設定</span>
+                </button>
+
+                {!selectedDrawing.locked && (
+                  <button onClick={() => { setDrawings(drawings.filter((d) => d.id !== selectedDrawing.id)); setSelectedDrawingId(null); setSettingsModalOpen(false); }} className="text-[#787b86] hover:text-[#ef5350] p-1 cursor-pointer" title="刪除">
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {settingsModalOpen && selectedDrawing && (
+              <DrawingSettingsModal
+                drawing={selectedDrawing}
+                symbol={symbol}
+                onUpdate={handleUpdateDrawing}
+                onSaveTemplate={handleSaveTemplate}
+                onClose={() => setSettingsModalOpen(false)}
+              />
+            )}
+
+            <div className={`absolute top-3 left-3 z-20 flex flex-col gap-1 bg-[#131722]/85 backdrop-blur-sm border border-[#2a2e39] rounded text-xs transition-all ${indPanelCollapsed ? "px-2.5 py-1.5" : "p-2 max-w-[300px]"}`}>
+              <div className="flex items-center gap-1 text-[#787b86] mb-1">
+              <div onClick={() => { const next = !indPanelCollapsed; setIndPanelCollapsed(next); localStorage.setItem("warroom_ind_collapsed", next ? "1" : "0"); }} className={`flex items-center justify-between gap-3 text-[#787b86] hover:text-white text-[11px] cursor-pointer select-none ${indPanelCollapsed ? "" : "pb-1 border-b border-[#2a2e39]/60"}`} title={indPanelCollapsed ? "展開指標列表" : "收合指標列表"}>
+                <span className="flex items-center gap-1"><Layers size={12} /> {indPanelCollapsed ? `指標 (${indicators.filter((i) => i.enabled).length})` : `已掛載指標 (${indicators.filter((i) => i.enabled).length}/${indicators.length})`}</span>
+                <span className="text-[10px] leading-none">{indPanelCollapsed ? "▼" : "▲"}</span>
+              </div>
+              </div>
+              {!indPanelCollapsed && indicators.map((ind) => (
+                <div
+                  key={ind.id}
+                  onClick={() => setActiveEditId(ind.id)}
+                  onDoubleClick={() => {
+                    if (ind.uiType === 'multilevel') setIndSettingsId(ind.id);
+                    else setEditorOpen(true);
+                  }}
+                  className={`flex items-center justify-between gap-3 px-2 py-1 rounded cursor-pointer ${activeEditId === ind.id ? 'bg-[#2a2e39] text-white' : 'hover:bg-[#2a2e39]/50'}`}
+                >
+                  <span className="truncate">{ind.name}</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (ind.uiType === 'multilevel') {
+                          setIndSettingsId(indSettingsId === ind.id ? null : ind.id);
+                        } else {
+                          setActiveEditId(ind.id);
+                          setEditorOpen(true);
+                        }
+                      }}
+                      className="text-[#787b86] hover:text-white cursor-pointer"
+                      title="指標參數設定"
+                    >
+                      <Settings2 size={13} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setIndicators(indicators.map((i) => (i.id === ind.id ? { ...i, enabled: !i.enabled } : i))); }} className="hover:text-white cursor-pointer" title="顯示/隱藏">
+                      {ind.enabled ? <Eye size={13} className="text-[#4caf50]" /> : <EyeOff size={13} className="text-[#787b86]" />}
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setIndicators(indicators.filter((i) => i.id !== ind.id)); }} className="hover:text-[#ef5350] cursor-pointer" title="移除指標">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {indSettingsId && (() => {
+              const targetInd = indicators.find((i) => i.id === indSettingsId);
+              if (!targetInd) return null;
+              return (
+                <IndicatorSettingsModal
+                  script={targetInd}
+                  onUpdate={(updated) => setIndicators(indicators.map((i) => (i.id === updated.id ? updated : i)))}
+                  onClose={() => setIndSettingsId(null)}
+                />
+              );
+            })()}
+
+            <ChartCanvas
+              bars={visibleBars}
+              outputs={indicatorOutputs}
+              symbol={symbol}
+              activeTool={activeTool}
+              magnetEnabled={magnetEnabled}
+              replaySelecting={replaySelecting}
+              onSelectReplayTime={(t) => {
+                setReplaySelecting(false);
+                setReplayCutoffTime(t);
+              }}
+              drawings={drawings}
+              selectedDrawingId={selectedDrawingId}
+              onSelectDrawing={setSelectedDrawingId}
+              onAddDrawing={(d) => setDrawings((prev) => [...prev, d])}
+              onUpdateDrawing={handleUpdateDrawing}
+              onDoubleClickDrawing={(d) => { setSelectedDrawingId(d.id); setSettingsModalOpen(true); }}
+              onFinishTool={() => setActiveTool('cursor')}
+              defaultFiboLevels={defaultFiboLevels}
+              defaultPosConfig={defaultPosConfig}
+              defaultFrvpConfig={defaultFrvpConfig}
+              onLoadMoreHistory={loadMoreHistory}
+            />
+          </div>
+
+          {editorOpen && activeScript && (
+            <div className="h-52 border-t border-[#2a2e39] bg-[#1e222d] flex flex-col shrink-0">
+              <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#2a2e39] text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#787b86]">正在編輯：</span>
+                  <input value={activeScript.name} onChange={(e) => setIndicators(indicators.map((i) => (i.id === activeScript.id ? { ...i, name: e.target.value } : i)))} className="bg-[#131722] text-white px-2 py-0.5 rounded border border-[#2a2e39] outline-none" />
+                  {errorMsg && <span className="text-[#ef5350] ml-2">{errorMsg}</span>}
+                </div>
+                <span className="flex items-center gap-1 text-[#4caf50]"><Play size={12} /> 即時編譯渲染中</span>
+              </div>
+              <textarea value={activeScript.code} onChange={(e) => setIndicators(indicators.map((i) => (i.id === activeScript.id ? { ...i, code: e.target.value } : i)))} spellCheck={false} className="flex-1 w-full bg-[#131722] text-[#d1d4dc] font-mono text-xs p-3 outline-none resize-none" />
+            </div>
+          )}
+        </div>
+
+        {wlOpen && (
+          <WatchlistPanel
+            symbol={symbol}
+            onSelectSymbol={setSymbol}
+            allSymbols={allSymbols}
+            tickersMap={tickersMap}
+            flagsMap={flagsMap}
+            onToggleRedFlag={handleToggleRedFlag}
+            onSetFlagColor={handleSetFlagColor}
+            refreshingPairs={refreshingPairs}
+            onRefreshPairs={fetchAllSymbols}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default App;
+
+
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\CandleCountdownBadge.tsx ===
+import React, { useState, useEffect } from 'react';
+import { Clock } from 'lucide-react';
+import type { IChartApi, ISeriesApi } from 'lightweight-charts';
+import type { Bar } from './indicatorEngine';
+import type { TimeframeOption } from './useMarketData';
+
+function formatCountdown(remainSec: number): string {
+  const s = Math.max(0, Math.floor(remainSec));
+  const days = Math.floor(s / 86400);
+  const hrs = Math.floor((s % 86400) / 3600);
+  const mins = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  if (days > 0) return `${days}d ${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+  if (hrs > 0) return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+  return `${pad(mins)}:${pad(secs)}`;
+}
+
+export function useCandleCountdown(lastBar: Bar | undefined, tf: TimeframeOption) {
+  const [remainSec, setRemainSec] = useState<number>(0);
+
+  useEffect(() => {
+    const calc = () => {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const period = tf.sec || 60;
+      const barStart = lastBar ? lastBar.time : Math.floor(nowSec / period) * period;
+      let nextClose = barStart + period;
+      if (nextClose <= nowSec) {
+        const currentBucket = Math.floor(nowSec / period) * period;
+        nextClose = currentBucket + period;
+      }
+      setRemainSec(Math.max(0, nextClose - nowSec));
+    };
+    calc();
+    const timer = setInterval(calc, 250);
+    return () => clearInterval(timer);
+  }, [lastBar?.time, tf.sec]);
+
+  return {
+    remainSec,
+    text: formatCountdown(remainSec),
+    isUrgent: remainSec > 0 && remainSec <= 10,
+  };
+}
+
+export const TopbarCountdownBadge: React.FC<{
+  lastBar: Bar | undefined;
+  tf: TimeframeOption;
+  hidden?: boolean;
+}> = ({ lastBar, tf, hidden }) => {
+  const { text, isUrgent } = useCandleCountdown(lastBar, tf);
+  if (hidden || !lastBar) return null;
+
+  return (
+    <div
+      className={`flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[11px] border transition-colors shrink-0 ${
+        isUrgent
+          ? 'bg-[#f23645]/20 border-[#f23645]/60 text-[#ff6b6b] font-bold'
+          : 'bg-[#1e222d] border-[#2a2e39] text-[#d1d4dc]'
+      }`}
+      title={`距離當前 ${tf.label} K 棒收盤剩餘時間`}
+    >
+      <Clock size={11} className={isUrgent ? 'text-[#ff6b6b]' : 'text-[#787b86]'} />
+      <span>{text}</span>
+    </div>
+  );
+};
+
+export const PriceAxisCountdownTag: React.FC<{
+  chartRef: React.RefObject<IChartApi | null>;
+  candleSeriesRef: React.RefObject<ISeriesApi<'Candlestick'> | null>;
+  lastBar: Bar | undefined;
+  tf: TimeframeOption;
+  hidden?: boolean;
+}> = ({ chartRef, candleSeriesRef, lastBar, tf, hidden }) => {
+  const { text, isUrgent } = useCandleCountdown(lastBar, tf);
+  const [topY, setTopY] = useState<number | null>(null);
+
+  useEffect(() => {
+    const updatePos = () => {
+      const series = candleSeriesRef.current;
+      const chart = chartRef.current;
+      if (!series || !chart || !lastBar) {
+        setTopY(null);
+        return;
+      }
+      const y = series.priceToCoordinate(lastBar.close);
+      if (y === null || Number.isNaN(y) || y < 10 || y > chart.paneSize().height - 24) {
+        setTopY(null);
+      } else {
+        setTopY(y);
+      }
+    };
+
+    updatePos();
+    const timer = setInterval(updatePos, 200);
+    return () => clearInterval(timer);
+  }, [lastBar?.close, lastBar?.time, chartRef, candleSeriesRef]);
+
+  if (hidden || !lastBar || topY === null) return null;
+  const isBull = lastBar.close >= lastBar.open;
+
+  return (
+    <div
+      style={{ top: Math.round(topY + 11) }}
+      className={`pointer-events-none absolute right-0 z-30 px-1.5 py-[1px] font-mono text-[11px] leading-tight text-white shadow-sm rounded-l-sm ${
+        isUrgent
+          ? 'bg-[#ff9800] font-bold'
+          : isBull
+            ? 'bg-[#089981]'
+            : 'bg-[#f23645]'
+      }`}
+    >
+      {text}
+    </div>
+  );
+};
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\ChartCanvas.tsx ===
+import React, { useEffect, useRef, useState } from 'react';
+import { createChart, CandlestickSeries, LineSeries, type IChartApi, type ISeriesApi } from 'lightweight-charts';
+import type { Bar, IndicatorOutput } from './indicatorEngine';
+
+export type DrawingToolType = 'cursor' | 'trendline' | 'hline' | 'rect' | 'fibo' | 'long' | 'short' | 'frvp' | 'path' | 'text';
+
+export interface FiboLevel {
+  enabled: boolean;
+  value: number;
+  color: string;
+}
+
+export interface PositionConfig {
+  accountSize: number;
+  riskMode: 'percent' | 'amount';
+  riskValue: number;
+  leverage: number;
+}
+
+export interface FrvpConfig {
+  rows: number;
+  volumeMode: 'up_down' | 'total';
+  vaPercent: number;
+  extendRight: boolean;
+}
+
+export interface DrawingItem {
+  id: string;
+  type: Exclude<DrawingToolType, 'cursor'>;
+  symbol: string;
+  locked?: boolean;
+  t1: number;
+  p1: number;
+  t2: number;
+  p2: number;
+  p3?: number;
+  points?: { time: number; price: number }[];
+  arrowEnd?: boolean;
+  text?: string;
+  fontSize?: number;
+  bgColor?: string;
+  color: string;
+  fillColor?: string;
+  lineWidth: number;
+  dashed?: boolean;
+  extendRight?: boolean;
+  fiboLevels?: FiboLevel[];
+  posConfig?: PositionConfig;
+  frvpConfig?: FrvpConfig;
+}
+
+export const DEFAULT_FIBO_LEVELS: FiboLevel[] = [
+  { enabled: true, value: -0.29, color: '#ef5350' },
+  { enabled: true, value: -0.21, color: '#ff9800' },
+  { enabled: true, value: 0, color: '#787b86' },
+  { enabled: false, value: 0.109, color: '#787b86' },
+  { enabled: false, value: 0.127, color: '#787b86' },
+  { enabled: false, value: 0.145, color: '#787b86' },
+  { enabled: false, value: 0.214, color: '#787b86' },
+  { enabled: false, value: 0.232, color: '#787b86' },
+  { enabled: false, value: 0.25, color: '#787b86' },
+  { enabled: false, value: 0.382, color: '#4caf50' },
+  { enabled: true, value: 0.5, color: '#4caf50' },
+  { enabled: true, value: 0.618, color: '#089981' },
+  { enabled: true, value: 0.705, color: '#2962ff' },
+  { enabled: true, value: 0.79, color: '#2962ff' },
+  { enabled: true, value: 1, color: '#787b86' },
+  { enabled: false, value: 1.272, color: '#9c27b0' },
+  { enabled: false, value: 1.414, color: '#9c27b0' },
+  { enabled: false, value: 1.54, color: '#9c27b0' },
+  { enabled: false, value: 1.618, color: '#e91e63' },
+  { enabled: false, value: 2, color: '#787b86' },
+  { enabled: false, value: 2.272, color: '#787b86' },
+  { enabled: false, value: 2.414, color: '#787b86' },
+  { enabled: false, value: 2.618, color: '#787b86' },
+  { enabled: false, value: 3.618, color: '#787b86' },
+];
+
+export const DEFAULT_POS_CONFIG: PositionConfig = {
+  accountSize: 2000,
+  riskMode: 'percent',
+  riskValue: 1.0,
+  leverage: 20,
+};
+
+export const DEFAULT_FRVP_CONFIG: FrvpConfig = {
+  rows: 200,
+  volumeMode: 'up_down',
+  vaPercent: 70,
+  extendRight: false,
+};
+
+export function calcPositionMetrics(d: DrawingItem) {
+  const cfg = d.posConfig || DEFAULT_POS_CONFIG;
+  const entry = d.p1;
+  const sl = d.p2;
+  const tp = d.p3 ?? (d.type === 'long' ? entry * 1.02 : entry * 0.98);
+  const riskPerUnit = Math.abs(entry - sl);
+  const rewardPerUnit = Math.abs(tp - entry);
+  const rr = riskPerUnit > 0 ? rewardPerUnit / riskPerUnit : 0;
+  const riskUsd = cfg.riskMode === 'percent' ? (cfg.accountSize * cfg.riskValue) / 100 : cfg.riskValue;
+  const qty = riskPerUnit > 0 ? riskUsd / riskPerUnit : 0;
+  const notionalUsd = qty * entry;
+  const marginUsd = cfg.leverage > 0 ? notionalUsd / cfg.leverage : notionalUsd;
+  const profitUsd = qty * rewardPerUnit;
+  return { entry, sl, tp, rr, riskUsd, qty, notionalUsd, marginUsd, profitUsd };
+}
+
+interface Props {
+  bars: Bar[];
+  outputs: IndicatorOutput[];
+  symbol: string;
+  activeTool: DrawingToolType;
+  magnetEnabled: boolean;
+  replaySelecting: boolean;
+  onSelectReplayTime: (time: number) => void;
+  drawings: DrawingItem[];
+  selectedDrawingId: string | null;
+  onSelectDrawing: (id: string | null) => void;
+  onAddDrawing: (d: DrawingItem) => void;
+  onUpdateDrawing: (d: DrawingItem) => void;
+  onDoubleClickDrawing: (d: DrawingItem) => void;
+  onFinishTool: () => void;
+  defaultFiboLevels: FiboLevel[];
+  defaultPosConfig: PositionConfig;
+  defaultFrvpConfig: FrvpConfig;
+  onLoadMoreHistory?: () => void;
+}
+
+export const ChartCanvas: React.FC<Props> = ({
+  bars, outputs, symbol, activeTool, magnetEnabled, replaySelecting, onSelectReplayTime,
+  drawings, selectedDrawingId, onSelectDrawing, onAddDrawing, onUpdateDrawing, onDoubleClickDrawing, onFinishTool,
+  defaultFiboLevels, defaultPosConfig, defaultFrvpConfig, onLoadMoreHistory,
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const lineSeriesListRef = useRef<ISeriesApi<'Line'>[]>([]);
+  const lastSymbolRef = useRef<string>(symbol);
+
+  const [draftDrawing, setDraftDrawing] = useState<DrawingItem | null>(null);
+  const [cursorPt, setCursorPt] = useState<{ time: number; price: number } | null>(null);
+  const [hoverReplayX, setHoverReplayX] = useState<number | null>(null);
+
+  const dragStateRef = useRef<{
+    id: string;
+    handle: 'p1' | 'p2' | 'p3' | 'move' | number;
+    startX: number;
+    startY: number;
+    orig: DrawingItem;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const chart = createChart(containerRef.current, {
+      layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
+      grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
+      crosshair: { mode: 0 },
+      timeScale: { borderColor: '#2a2e39', timeVisible: true, rightOffset: 25 },
+      rightPriceScale: { borderColor: '#2a2e39', autoScale: true },
+    });
+
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: '#26a69a', downColor: '#ef5350', borderVisible: false,
+      wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+    });
+
+    chartRef.current = chart;
+    candleSeriesRef.current = candleSeries;
+
+    const handleResize = () => {
+      if (!containerRef.current || !chartRef.current) return;
+      chartRef.current.applyOptions({ width: containerRef.current.clientWidth, height: containerRef.current.clientHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => { window.removeEventListener('resize', handleResize); chart.remove(); };
+  }, []);
+
+  const prevRenderedBarsRef = useRef<typeof bars>([]);
+  const drawOverlayFnRef = useRef<(() => void) | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const onLoadMoreRef = useRef(onLoadMoreHistory);
+  onLoadMoreRef.current = onLoadMoreHistory;
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    const el = containerRef.current;
+    if (!chart || !el) return;
+
+    const scheduleDraw = () => {
+      if (rafIdRef.current !== null) return;
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        drawOverlayFnRef.current?.();
+      });
+    };
+
+    const handleRangeChange = (logicalRange: { from: number; to: number } | null) => {
+      scheduleDraw();
+      if (logicalRange && logicalRange.from < 80 && onLoadMoreRef.current) {
+        onLoadMoreRef.current();
+      }
+    };
+
+    chart.timeScale().subscribeVisibleLogicalRangeChange(handleRangeChange);
+    chart.timeScale().subscribeSizeChange(scheduleDraw);
+    el.addEventListener('wheel', scheduleDraw, { passive: true });
+    el.addEventListener('mousemove', scheduleDraw, { passive: true });
+
+    return () => {
+      if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleRangeChange);
+      chart.timeScale().unsubscribeSizeChange(scheduleDraw);
+      el.removeEventListener('wheel', scheduleDraw);
+      el.removeEventListener('mousemove', scheduleDraw);
+    };
+  }, []);
+  useEffect(() => {
+    if (!candleSeriesRef.current || !chartRef.current) return;
+    if (bars.length === 0) {
+      prevRenderedBarsRef.current = [];
+      candleSeriesRef.current.setData([]);
+      return;
+    }
+
+    const prev = prevRenderedBarsRef.current;
+    const isSameSymbol = lastSymbolRef.current === symbol;
+    const lastBar = bars[bars.length - 1];
+    const prevLast = prev.length > 0 ? prev[prev.length - 1] : null;
+
+    // 只要同商品且時間往前推進或即時更新，100% 走 update() 增量渲染，絕不觸發 setData() 清空黑幀
+    if (isSameSymbol && prevLast !== null && lastBar.time >= prevLast.time && Math.abs(bars.length - prev.length) <= 5) {
+      candleSeriesRef.current.update(lastBar as any);
+      prevRenderedBarsRef.current = bars;
+      return;
+    }
+
+    const lastPrice = lastBar.close;
+    let precision = 2, minMove = 0.01;
+    if (lastPrice < 0.01) { precision = 6; minMove = 0.000001; }
+    else if (lastPrice < 1) { precision = 5; minMove = 0.00001; }
+    else if (lastPrice < 100) { precision = 4; minMove = 0.0001; }
+
+    candleSeriesRef.current.applyOptions({ priceFormat: { type: "price", precision, minMove } });
+    candleSeriesRef.current.setData(bars as any);
+    prevRenderedBarsRef.current = bars;
+    lastSymbolRef.current = symbol;
+    chartRef.current.priceScale("right").applyOptions({ autoScale: true });
+    chartRef.current.timeScale().scrollToRealTime();
+  }, [bars, symbol]);
+
+  useEffect(() => {
+    if (activeTool === 'cursor') {
+      setDraftDrawing(null);
+      setCursorPt(null);
+    }
+  }, [activeTool]);
+
+  const getCoordsHelper = () => {
+    const chart = chartRef.current;
+    const candleSeries = candleSeriesRef.current;
+    if (!chart || !candleSeries || bars.length === 0) return null;
+    const timeScale = chart.timeScale();
+    const firstBar = bars[0];
+    const lastBar = bars[bars.length - 1];
+    const barStep = bars.length > 1 ? bars[1].time - bars[0].time : 900;
+
+    const getPxPerBar = (): number => {
+      if (bars.length < 2) return 8;
+      const xA = timeScale.timeToCoordinate(bars[bars.length - 2].time as any);
+      const xB = timeScale.timeToCoordinate(bars[bars.length - 1].time as any);
+      if (xA !== null && xB !== null && xB > xA) return xB - xA;
+      return 8;
+    };
+
+    const timeToX = (t: number): number | null => {
+      const pxPerBar = getPxPerBar();
+      if (t <= lastBar.time && t >= firstBar.time) {
+        let closest = bars[0].time;
+        let minDiff = Math.abs(t - closest);
+        for (let i = 1; i < bars.length; i++) {
+          const diff = Math.abs(t - bars[i].time);
+          if (diff < minDiff) { minDiff = diff; closest = bars[i].time; }
+        }
+        const coord = timeScale.timeToCoordinate(closest as any);
+        if (coord !== null) return coord;
+        const lastX = timeScale.timeToCoordinate(lastBar.time as any);
+        if (lastX !== null) return lastX - ((lastBar.time - closest) / barStep) * pxPerBar;
+        return null;
+      } else if (t > lastBar.time) {
+        const lastX = timeScale.timeToCoordinate(lastBar.time as any);
+        if (lastX === null) return null;
+        return lastX + ((t - lastBar.time) / barStep) * pxPerBar;
+      } else {
+        const firstX = timeScale.timeToCoordinate(firstBar.time as any);
+        if (firstX !== null) return firstX - ((firstBar.time - t) / barStep) * pxPerBar;
+        const lastX = timeScale.timeToCoordinate(lastBar.time as any);
+        if (lastX !== null) return lastX - ((lastBar.time - t) / barStep) * pxPerBar;
+        return -200;
+      }
+    };
+
+    const xToTime = (x: number): number => {
+      const t = timeScale.coordinateToTime(x);
+      if (t !== null) return Number(t);
+      const lastX = timeScale.timeToCoordinate(lastBar.time as any) ?? 0;
+      const pxPerBar = getPxPerBar();
+      return Math.round(lastBar.time + ((x - lastX) / pxPerBar) * barStep);
+    };
+
+    const pointToTimePrice = (x: number, y: number, useMagnet: boolean): { time: number; price: number } => {
+      const t = xToTime(x);
+      let price = candleSeries.coordinateToPrice(y) ?? lastBar.close;
+      if (useMagnet) {
+        let closestBar = bars[0];
+        let minTDiff = Math.abs(t - closestBar.time);
+        for (const b of bars) {
+          const d = Math.abs(t - b.time);
+          if (d < minTDiff) { minTDiff = d; closestBar = b; }
+        }
+        const candidates = [
+          { p: closestBar.high, yCoord: candleSeries.priceToCoordinate(closestBar.high) },
+          { p: closestBar.low, yCoord: candleSeries.priceToCoordinate(closestBar.low) },
+          { p: closestBar.open, yCoord: candleSeries.priceToCoordinate(closestBar.open) },
+          { p: closestBar.close, yCoord: candleSeries.priceToCoordinate(closestBar.close) },
+        ];
+        let minPy = 22;
+        for (const c of candidates) {
+          if (c.yCoord !== null && Math.abs(c.yCoord - y) < minPy) {
+            minPy = Math.abs(c.yCoord - y);
+            price = c.p;
+          }
+        }
+      }
+      return { time: t, price };
+    };
+
+    return { chart, candleSeries, timeToX, xToTime, pointToTimePrice, barStep, lastBar };
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    const helper = getCoordsHelper();
+    if (!rect || !helper) return;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // 若處於 K 線回放選點模式，點擊直接切斷該時間點
+    if (replaySelecting) {
+      const cutTime = helper.xToTime(x);
+      setHoverReplayX(null);
+      onSelectReplayTime(cutTime);
+      return;
+    }
+
+    if (activeTool !== 'cursor') {
+      const pt = helper.pointToTimePrice(x, y, magnetEnabled);
+
+      // 文字標註工具
+      if (activeTool === 'text') {
+        const inputStr = prompt('請輸入標註文字（例如：BSL、FVG、流動性獵殺）：', 'BSL');
+        if (inputStr && inputStr.trim()) {
+          const newItem: DrawingItem = {
+            id: `drw_${Date.now()}`, type: 'text', symbol, locked: false,
+            t1: pt.time, p1: pt.price, t2: pt.time, p2: pt.price,
+            text: inputStr.trim(), fontSize: 13, color: '#ffffff', bgColor: 'rgba(30, 34, 45, 0.88)',
+            lineWidth: 1,
+          };
+          onAddDrawing(newItem);
+          onSelectDrawing(newItem.id);
+        }
+        onFinishTool();
+        return;
+      }
+
+      if (activeTool === 'path') {
+        if (e.button === 2) {
+          if (draftDrawing && (draftDrawing.points?.length || 0) >= 2) {
+            onAddDrawing(draftDrawing);
+            onSelectDrawing(draftDrawing.id);
+          }
+          setDraftDrawing(null);
+          setCursorPt(null);
+          onFinishTool();
+          return;
+        }
+        if (!draftDrawing) {
+          setDraftDrawing({
+            id: `drw_${Date.now()}`, type: 'path', symbol, locked: false,
+            t1: pt.time, p1: pt.price, t2: pt.time, p2: pt.price,
+            points: [pt], arrowEnd: true, color: '#facc15', lineWidth: 2,
+          });
+        } else {
+          const nextPts = [...(draftDrawing.points || []), pt];
+          setDraftDrawing({ ...draftDrawing, points: nextPts, t2: pt.time, p2: pt.price });
+        }
+        return;
+      }
+
+      if (activeTool === 'hline') {
+        onAddDrawing({
+          id: `drw_${Date.now()}`, type: 'hline', symbol, locked: false,
+          t1: pt.time, p1: pt.price, t2: pt.time + helper.barStep * 20, p2: pt.price,
+          color: '#2962ff', lineWidth: 2, extendRight: true,
+        });
+        onFinishTool();
+        return;
+      }
+
+      if (activeTool === 'long' || activeTool === 'short') {
+        const span = Math.abs(helper.lastBar.high - helper.lastBar.low) * 1.5 || pt.price * 0.01;
+        const sl = activeTool === 'long' ? pt.price - span : pt.price + span;
+        const tp = activeTool === 'long' ? pt.price + span * 2 : pt.price - span * 2;
+        const newItem: DrawingItem = {
+          id: `drw_${Date.now()}`, type: activeTool, symbol, locked: false,
+          t1: pt.time, p1: pt.price, t2: pt.time + helper.barStep * 16, p2: sl, p3: tp,
+          color: activeTool === 'long' ? '#089981' : '#f23645', lineWidth: 1,
+          posConfig: { ...defaultPosConfig },
+        };
+        onAddDrawing(newItem);
+        onSelectDrawing(newItem.id);
+        onFinishTool();
+        return;
+      }
+
+      if (!draftDrawing) {
+        setDraftDrawing({
+          id: `drw_${Date.now()}`,
+          type: activeTool,
+          symbol,
+          locked: false,
+          t1: pt.time, p1: pt.price, t2: pt.time, p2: pt.price,
+          color: activeTool === 'rect' ? '#2962ff' : '#787b86',
+          fillColor: activeTool === 'rect' ? 'rgba(41, 98, 255, 0.16)' : undefined,
+          lineWidth: 2,
+          fiboLevels: activeTool === 'fibo' ? JSON.parse(JSON.stringify(defaultFiboLevels)) : undefined,
+          frvpConfig: activeTool === 'frvp' ? { ...defaultFrvpConfig } : undefined,
+        });
+      } else {
+        const finished = { ...draftDrawing, t2: pt.time, p2: pt.price };
+        setDraftDrawing(null);
+        onAddDrawing(finished);
+        onSelectDrawing(finished.id);
+        onFinishTool();
+      }
+      return;
+    }
+
+    const symDrawings = drawings.filter((d) => d.symbol === symbol);
+    if (selectedDrawingId) {
+      const sel = symDrawings.find((d) => d.id === selectedDrawingId);
+      if (sel && !sel.locked) {
+        if (sel.type === 'path' && sel.points) {
+          for (let idx = 0; idx < sel.points.length; idx++) {
+            const px = helper.timeToX(sel.points[idx].time);
+            const py = helper.candleSeries.priceToCoordinate(sel.points[idx].price);
+            if (px !== null && py !== null && Math.hypot(x - px, y - py) < 12) {
+              dragStateRef.current = { id: sel.id, handle: idx, startX: x, startY: y, orig: JSON.parse(JSON.stringify(sel)) };
+              helper.chart.applyOptions({ handleScroll: false, handleScale: false });
+              return;
+            }
+          }
+        } else if (sel.type !== 'text') {
+          const x1 = helper.timeToX(sel.t1);
+          const y1 = helper.candleSeries.priceToCoordinate(sel.p1);
+          const x2 = helper.timeToX(sel.t2);
+          const y2 = helper.candleSeries.priceToCoordinate(sel.p2);
+          const y3 = sel.p3 !== undefined ? helper.candleSeries.priceToCoordinate(sel.p3) : null;
+
+          if (x1 !== null && y1 !== null && Math.hypot(x - x1, y - y1) < 12) {
+            dragStateRef.current = { id: sel.id, handle: 'p1', startX: x, startY: y, orig: { ...sel } };
+            helper.chart.applyOptions({ handleScroll: false, handleScale: false });
+            return;
+          }
+          if (x2 !== null && y2 !== null && Math.hypot(x - x2, y - y2) < 12) {
+            dragStateRef.current = { id: sel.id, handle: 'p2', startX: x, startY: y, orig: { ...sel } };
+            helper.chart.applyOptions({ handleScroll: false, handleScale: false });
+            return;
+          }
+          if (x2 !== null && y3 !== null && Math.hypot(x - x2, y - y3) < 12) {
+            dragStateRef.current = { id: sel.id, handle: 'p3', startX: x, startY: y, orig: { ...sel } };
+            helper.chart.applyOptions({ handleScroll: false, handleScale: false });
+            return;
+          }
+        }
+      }
+    }
+
+    for (let i = symDrawings.length - 1; i >= 0; i--) {
+      const d = symDrawings[i];
+      let hit = false;
+
+      if (d.type === 'path' && d.points && d.points.length >= 2) {
+        for (let k = 1; k < d.points.length; k++) {
+          const px1 = helper.timeToX(d.points[k - 1].time);
+          const py1 = helper.candleSeries.priceToCoordinate(d.points[k - 1].price);
+          const px2 = helper.timeToX(d.points[k].time);
+          const py2 = helper.candleSeries.priceToCoordinate(d.points[k].price);
+          if (px1 === null || py1 === null || px2 === null || py2 === null) continue;
+          const len2 = (px2 - px1) ** 2 + (py2 - py1) ** 2;
+          if (len2 > 0) {
+            const proj = Math.max(0, Math.min(1, ((x - px1) * (px2 - px1) + (y - py1) * (py2 - py1)) / len2));
+            if (Math.hypot(x - (px1 + proj * (px2 - px1)), y - (py1 + proj * (py2 - py1))) < 9) { hit = true; break; }
+          }
+        }
+      } else {
+        const x1 = helper.timeToX(d.t1);
+        const y1 = helper.candleSeries.priceToCoordinate(d.p1);
+        const x2 = helper.timeToX(d.t2);
+        const y2 = helper.candleSeries.priceToCoordinate(d.p2);
+        if (x1 === null || y1 === null || x2 === null || y2 === null) continue;
+
+        if (d.type === 'text') {
+          const boxW = (d.text?.length || 2) * (d.fontSize || 13) + 16;
+          const boxH = (d.fontSize || 13) + 12;
+          hit = x >= x1 - 4 && x <= x1 + boxW && y >= y1 - boxH && y <= y1 + 4;
+        } else if (d.type === 'hline') {
+          hit = Math.abs(y - y1) < 8;
+        } else if (d.type === 'rect' || d.type === 'fibo') {
+          hit = x >= Math.min(x1, x2) - 6 && x <= Math.max(x1, x2) + 6 && y >= Math.min(y1, y2) - 6 && y <= Math.max(y1, y2) + 6;
+        } else if (d.type === 'frvp') {
+          const minT = Math.min(d.t1, d.t2);
+          const maxT = Math.max(d.t1, d.t2);
+          const rangeBars = bars.filter((b) => b.time >= minT && b.time <= maxT);
+          const hi = rangeBars.length > 0 ? Math.max(...rangeBars.map((b) => b.high)) : Math.max(d.p1, d.p2);
+          const lo = rangeBars.length > 0 ? Math.min(...rangeBars.map((b) => b.low)) : Math.min(d.p1, d.p2);
+          const yHi = helper.candleSeries.priceToCoordinate(hi) ?? Math.min(y1, y2);
+          const yLo = helper.candleSeries.priceToCoordinate(lo) ?? Math.max(y1, y2);
+          hit = x >= Math.min(x1, x2) - 6 && x <= Math.max(x1, x2) + 6 && y >= yHi - 6 && y <= yLo + 6;
+        } else if (d.type === 'long' || d.type === 'short') {
+          const y3 = d.p3 !== undefined ? helper.candleSeries.priceToCoordinate(d.p3) ?? y1 : y1;
+          hit = x >= Math.min(x1, x2) - 6 && x <= Math.max(x1, x2) + 6 && y >= Math.min(y1, y2, y3) - 6 && y <= Math.max(y1, y2, y3) + 6;
+        } else if (d.type === 'trendline') {
+          const len2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+          if (len2 > 0) {
+            const tProj = Math.max(0, Math.min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / len2));
+            hit = Math.hypot(x - (x1 + tProj * (x2 - x1)), y - (y1 + tProj * (y2 - y1))) < 8;
+          }
+        }
+      }
+
+      if (hit) {
+        onSelectDrawing(d.id);
+        if (!d.locked) {
+          dragStateRef.current = { id: d.id, handle: 'move', startX: x, startY: y, orig: JSON.parse(JSON.stringify(d)) };
+          helper.chart.applyOptions({ handleScroll: false, handleScale: false });
+        }
+        return;
+      }
+    }
+
+    onSelectDrawing(null);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    const helper = getCoordsHelper();
+    if (!rect || !helper) return;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (replaySelecting) {
+      setHoverReplayX(x);
+      return;
+    }
+
+    if (draftDrawing) {
+      const pt = helper.pointToTimePrice(x, y, magnetEnabled);
+      if (draftDrawing.type === 'path') setCursorPt(pt);
+      else setDraftDrawing({ ...draftDrawing, t2: pt.time, p2: pt.price });
+      return;
+    }
+
+    const drag = dragStateRef.current;
+    if (drag && !drag.orig.locked) {
+      const pt = helper.pointToTimePrice(x, y, magnetEnabled);
+      const orig = drag.orig;
+
+      if (typeof drag.handle === 'number' && orig.type === 'path' && orig.points) {
+        const nextPts = [...orig.points];
+        nextPts[drag.handle] = pt;
+        onUpdateDrawing({ ...orig, points: nextPts, t1: nextPts[0].time, p1: nextPts[0].price, t2: nextPts[nextPts.length - 1].time, p2: nextPts[nextPts.length - 1].price });
+      } else if (drag.handle === 'p1') {
+        onUpdateDrawing({ ...orig, t1: pt.time, p1: pt.price });
+      } else if (drag.handle === 'p2') {
+        onUpdateDrawing({ ...orig, t2: pt.time, p2: pt.price });
+      } else if (drag.handle === 'p3') {
+        onUpdateDrawing({ ...orig, t2: pt.time, p3: pt.price });
+      } else if (drag.handle === 'move') {
+        const startT = helper.xToTime(drag.startX);
+        const startP = helper.candleSeries.coordinateToPrice(drag.startY) ?? orig.p1;
+        const dt = pt.time - startT;
+        const dp = (helper.candleSeries.coordinateToPrice(y) ?? orig.p1) - startP;
+        onUpdateDrawing({
+          ...orig,
+          t1: orig.t1 + dt, t2: orig.t2 + dt,
+          p1: orig.p1 + dp, p2: orig.p2 + dp,
+          p3: orig.p3 !== undefined ? orig.p3 + dp : undefined,
+          points: orig.points ? orig.points.map((p) => ({ time: p.time + dt, price: p.price + dp })) : undefined,
+        });
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (dragStateRef.current) {
+      dragStateRef.current = null;
+      chartRef.current?.applyOptions({ handleScroll: true, handleScale: true });
+    }
+  };
+
+  const handleDoubleClick = () => {
+    if (activeTool === 'path' && draftDrawing) {
+      const pts = draftDrawing.points || [];
+      const cleanPts = pts.length > 2 ? pts.slice(0, -1) : pts;
+      if (cleanPts.length >= 2) {
+        const finished = { ...draftDrawing, points: cleanPts };
+        onAddDrawing(finished);
+        onSelectDrawing(finished.id);
+      }
+      setDraftDrawing(null);
+      setCursorPt(null);
+      onFinishTool();
+      return;
+    }
+
+    if (!selectedDrawingId) return;
+    const found = drawings.find((d) => d.id === selectedDrawingId);
+    if (found) onDoubleClickDrawing(found);
+  };
+
+  const drawArrowHead = (ctx: CanvasRenderingContext2D, fromX: number, fromY: number, toX: number, toY: number, color: string, size = 10) => {
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.moveTo(toX - size * Math.cos(angle - Math.PI / 6), toY - size * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX, toY);
+    ctx.lineTo(toX - size * Math.cos(angle + Math.PI / 6), toY - size * Math.sin(angle + Math.PI / 6));
+    ctx.stroke();
+  };
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    const candleSeries = candleSeriesRef.current;
+    if (!chart || !candleSeries) return;
+
+    const allPlots = outputs.flatMap((out) => out.plots);
+    // 多餘的舊線條才移除，既有的線條原地更新顏色與數據，避免整張重畫閃爍
+    while (lineSeriesListRef.current.length > allPlots.length) {
+      const extra = lineSeriesListRef.current.pop();
+      if (extra) chart.removeSeries(extra);
+    }
+    allPlots.forEach((p, idx) => {
+      let ls = lineSeriesListRef.current[idx] as (ISeriesApi<'Line'> & { _lastLen?: number; _firstTime?: number }) | undefined;
+      if (!ls) {
+        ls = chart.addSeries(LineSeries, { color: p.color, lineWidth: p.width as any, priceLineVisible: false, lastValueVisible: false }) as any;
+        lineSeriesListRef.current.push(ls!);
+      } else {
+        ls.applyOptions({ color: p.color, lineWidth: p.width as any });
+      }
+      const d = p.data || [];
+      const firstT = d.length > 0 ? d[0].time : undefined;
+      const prevLen = ls!._lastLen ?? -1;
+      const prevFirstT = ls!._firstTime;
+
+      if (d.length > 0 && prevFirstT === firstT && (d.length === prevLen || d.length === prevLen + 1)) {
+        ls!.update(d[d.length - 1] as any);
+      } else {
+        ls!.setData(d as any);
+      }
+      ls!._lastLen = d.length;
+      ls!._firstTime = firstT;
+    });
+
+    const drawOverlay = () => {
+      const canvas = overlayRef.current;
+      const container = containerRef.current;
+      const helper = getCoordsHelper();
+      if (!canvas || !container || !helper) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+      }
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      // 若處於回放選擇剪刀位置模式，畫出藍色垂直切割預覽線
+      if (replaySelecting && hoverReplayX !== null) {
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = '#2962ff';
+        ctx.lineWidth = 2;
+        ctx.moveTo(hoverReplayX, 0);
+        ctx.lineTo(hoverReplayX, h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      outputs.forEach((out) => {
+        out.lines.forEach((ln) => {
+          const x1 = helper.timeToX(ln.t1);
+          const x2 = helper.timeToX(ln.t2);
+          const y1 = candleSeries.priceToCoordinate(ln.p1);
+          const y2 = candleSeries.priceToCoordinate(ln.p2);
+          if (x1 === null || x2 === null || y1 === null || y2 === null) return;
+          ctx.beginPath();
+          ctx.strokeStyle = ln.color;
+          ctx.lineWidth = ln.width;
+          ctx.setLineDash(ln.dashed ? [6, 4] : []);
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        });
+        ctx.setLineDash([]);
+        ctx.font = '11px sans-serif';
+        out.labels.forEach((lb) => {
+          const x = helper.timeToX(lb.time);
+          const y = candleSeries.priceToCoordinate(lb.price);
+          if (x === null || y === null) return;
+          ctx.fillStyle = lb.color;
+          ctx.fillText(lb.text, x + 4, y - 4);
+        });
+      });
+
+      const renderList = [...drawings.filter((d) => d.symbol === symbol)];
+      if (draftDrawing) renderList.push(draftDrawing);
+
+      renderList.forEach((d) => {
+        const isSel = d.id === selectedDrawingId;
+        ctx.setLineDash(d.dashed ? [6, 4] : []);
+
+        if (d.type === 'path') {
+          const pts = [...(d.points || [])];
+          if (d.id === draftDrawing?.id && cursorPt) pts.push(cursorPt);
+          if (pts.length >= 2) {
+            ctx.beginPath();
+            ctx.strokeStyle = d.color;
+            ctx.lineWidth = d.lineWidth;
+            let prevX = 0, prevY = 0, lastX = 0, lastY = 0;
+            pts.forEach((pt, idx) => {
+              const px = helper.timeToX(pt.time);
+              const py = candleSeries.priceToCoordinate(pt.price);
+              if (px === null || py === null) return;
+              if (idx === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+              prevX = lastX; prevY = lastY;
+              lastX = px; lastY = py;
+            });
+            ctx.stroke();
+            if (d.arrowEnd !== false) drawArrowHead(ctx, prevX, prevY, lastX, lastY, d.color, 11);
+          }
+          if (isSel && !d.locked && d.points) {
+            d.points.forEach((pt) => {
+              const px = helper.timeToX(pt.time);
+              const py = candleSeries.priceToCoordinate(pt.price);
+              if (px !== null && py !== null) {
+                ctx.beginPath();
+                ctx.arc(px, py, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.strokeStyle = '#2962ff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+              }
+            });
+          }
+          return;
+        }
+
+        const x1 = helper.timeToX(d.t1);
+        const y1 = candleSeries.priceToCoordinate(d.p1);
+        const x2 = helper.timeToX(d.t2);
+        const y2 = candleSeries.priceToCoordinate(d.p2);
+        if (x1 === null || y1 === null || x2 === null || y2 === null) return;
+
+        // --- TEXT 文字標註渲染 ---
+        if (d.type === 'text') {
+          const fSize = d.fontSize || 13;
+          const txt = d.text || '文字標註';
+          ctx.font = `bold ${fSize}px sans-serif`;
+          const metrics = ctx.measureText(txt);
+          const padX = 8;
+          const boxW = metrics.width + padX * 2;
+          const boxH = fSize + 10;
+          const topY = y1 - boxH;
+
+          if (d.bgColor && d.bgColor !== 'transparent') {
+            ctx.fillStyle = d.bgColor;
+            ctx.fillRect(x1, topY, boxW, boxH);
+          }
+          if (isSel) {
+            ctx.strokeStyle = '#2962ff';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x1, topY, boxW, boxH);
+          }
+          ctx.fillStyle = d.color || '#ffffff';
+          ctx.fillText(txt, x1 + padX, y1 - 6);
+          return;
+        }
+
+        if (d.type === 'frvp') {
+          const cfg = d.frvpConfig || DEFAULT_FRVP_CONFIG;
+          const minT = Math.min(d.t1, d.t2);
+          const maxT = Math.max(d.t1, d.t2);
+          const leftX = Math.min(x1, x2);
+          const rightX = cfg.extendRight ? w : Math.max(x1, x2);
+          const rangeW = Math.max(40, Math.max(x1, x2) - leftX);
+          const maxBarW = rangeW * 0.42;
+
+          const rangeBars = bars.filter((b) => b.time >= minT && b.time <= maxT);
+          if (rangeBars.length > 0) {
+            const hi = Math.max(...rangeBars.map((b) => b.high));
+            const lo = Math.min(...rangeBars.map((b) => b.low));
+            const rowsCount = Math.max(10, Math.min(500, cfg.rows || 200));
+            const stepP = (hi - lo) / rowsCount || 0.0001;
+
+            const upVols = new Array(rowsCount).fill(0);
+            const dnVols = new Array(rowsCount).fill(0);
+
+            for (const b of rangeBars) {
+              const vol = b.volume || 1;
+              const barRange = Math.max(b.high - b.low, stepP * 0.1);
+              const bodyTop = Math.max(b.open, b.close);
+              const bodyBot = Math.min(b.open, b.close);
+              const buyRatio = Math.max(0.15, Math.min(0.85, (b.close - b.low) / barRange));
+              const upVolTotal = vol * buyRatio;
+              const dnVolTotal = vol * (1 - buyRatio);
+
+              const startRow = Math.max(0, Math.floor((b.low - lo) / stepP));
+              const endRow = Math.min(rowsCount - 1, Math.floor((b.high - lo) / stepP));
+
+              let weightSum = 0;
+              const rowWeights: number[] = [];
+              for (let r = startRow; r <= endRow; r++) {
+                const rowMid = lo + (r + 0.5) * stepP;
+                let wRow = 1.0;
+                if (rowMid > bodyTop && b.high > bodyTop) {
+                  const distRatio = Math.min(1, (rowMid - bodyTop) / (b.high - bodyTop));
+                  wRow = 0.45 * (1 - distRatio * 0.85);
+                } else if (rowMid < bodyBot && bodyBot > b.low) {
+                  const distRatio = Math.min(1, (bodyBot - rowMid) / (bodyBot - b.low));
+                  wRow = 0.45 * (1 - distRatio * 0.85);
+                }
+                rowWeights.push(wRow);
+                weightSum += wRow;
+              }
+
+              if (weightSum > 0) {
+                for (let idx = 0; idx < rowWeights.length; idx++) {
+                  const r = startRow + idx;
+                  const share = rowWeights[idx] / weightSum;
+                  upVols[r] += upVolTotal * share;
+                  dnVols[r] += dnVolTotal * share;
+                }
+              }
+            }
+
+            const totVols = upVols.map((u, idx) => u + dnVols[idx]);
+            const maxRowVol = Math.max(...totVols) || 1;
+            const totalAllVol = totVols.reduce((a, b) => a + b, 0) || 1;
+
+            let pocIdx = 0;
+            for (let r = 1; r < rowsCount; r++) {
+              if (totVols[r] > totVols[pocIdx]) pocIdx = r;
+            }
+
+            const targetVaVol = totalAllVol * ((cfg.vaPercent || 70) / 100);
+            let accVaVol = totVols[pocIdx];
+            let lowVaIdx = pocIdx;
+            let highVaIdx = pocIdx;
+            while (accVaVol < targetVaVol && (lowVaIdx > 0 || highVaIdx < rowsCount - 1)) {
+              const upAdd = highVaIdx < rowsCount - 1 ? totVols[highVaIdx + 1] : -1;
+              const dnAdd = lowVaIdx > 0 ? totVols[lowVaIdx - 1] : -1;
+              if (upAdd >= dnAdd && highVaIdx < rowsCount - 1) { highVaIdx++; accVaVol += upAdd; }
+              else if (lowVaIdx > 0) { lowVaIdx--; accVaVol += dnAdd; }
+              else break;
+            }
+
+            for (let r = 0; r < rowsCount; r++) {
+              if (totVols[r] <= 0) continue;
+              const pBottom = lo + r * stepP;
+              const pTop = pBottom + stepP;
+              const yTop = candleSeries.priceToCoordinate(pTop);
+              const yBot = candleSeries.priceToCoordinate(pBottom);
+              if (yTop === null || yBot === null) continue;
+              const rowH = Math.max(1, Math.abs(yBot - yTop));
+              const inVA = r >= lowVaIdx && r <= highVaIdx;
+
+              if (cfg.volumeMode === 'up_down') {
+                const upW = (upVols[r] / maxRowVol) * maxBarW;
+                const dnW = (dnVols[r] / maxRowVol) * maxBarW;
+                ctx.fillStyle = inVA ? 'rgba(0, 188, 212, 0.72)' : 'rgba(0, 188, 212, 0.28)';
+                ctx.fillRect(leftX, yTop, upW, rowH);
+                ctx.fillStyle = inVA ? 'rgba(255, 213, 79, 0.78)' : 'rgba(255, 213, 79, 0.30)';
+                ctx.fillRect(leftX + upW, yTop, dnW, rowH);
+              } else {
+                const totW = (totVols[r] / maxRowVol) * maxBarW;
+                ctx.fillStyle = inVA ? 'rgba(41, 98, 255, 0.72)' : 'rgba(120, 123, 134, 0.32)';
+                ctx.fillRect(leftX, yTop, totW, rowH);
+              }
+            }
+
+            const vahPrice = lo + (highVaIdx + 1) * stepP;
+            const valPrice = lo + lowVaIdx * stepP;
+            const pocPrice = lo + (pocIdx + 0.5) * stepP;
+            const yVah = candleSeries.priceToCoordinate(vahPrice);
+            const yVal = candleSeries.priceToCoordinate(valPrice);
+            const yPoc = candleSeries.priceToCoordinate(pocPrice);
+
+            ctx.setLineDash([]);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            if (yVah !== null) { ctx.beginPath(); ctx.moveTo(leftX, yVah); ctx.lineTo(rightX, yVah); ctx.stroke(); }
+            if (yVal !== null) { ctx.beginPath(); ctx.moveTo(leftX, yVal); ctx.lineTo(rightX, yVal); ctx.stroke(); }
+
+            if (yPoc !== null) {
+              ctx.setLineDash([6, 5]);
+              ctx.strokeStyle = '#f23645';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.moveTo(leftX, yPoc);
+              ctx.lineTo(rightX, yPoc);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+          }
+        } else if (d.type === 'trendline') {
+          ctx.beginPath();
+          ctx.strokeStyle = d.color;
+          ctx.lineWidth = d.lineWidth;
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        } else if (d.type === 'hline') {
+          ctx.beginPath();
+          ctx.strokeStyle = d.color;
+          ctx.lineWidth = d.lineWidth;
+          ctx.moveTo(0, y1);
+          ctx.lineTo(w, y1);
+          ctx.stroke();
+        } else if (d.type === 'rect') {
+          const rx = Math.min(x1, x2);
+          const ry = Math.min(y1, y2);
+          const rw = Math.abs(x2 - x1);
+          const rh = Math.abs(y2 - y1);
+          ctx.fillStyle = d.fillColor || 'rgba(41, 98, 255, 0.16)';
+          ctx.fillRect(rx, ry, rw, rh);
+          ctx.strokeStyle = d.color;
+          ctx.lineWidth = d.lineWidth;
+          ctx.strokeRect(rx, ry, rw, rh);
+        } else if (d.type === 'fibo') {
+          ctx.beginPath();
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = '#787b86';
+          ctx.lineWidth = 1;
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const minX = Math.min(x1, x2);
+          const maxX = d.extendRight ? w : Math.max(x1, x2);
+          const levels = d.fiboLevels || DEFAULT_FIBO_LEVELS;
+          ctx.font = '11px monospace';
+
+          levels.forEach((lv) => {
+            if (!lv.enabled) return;
+            const priceAtLv = d.p2 + (d.p1 - d.p2) * lv.value;
+            const yLv = candleSeries.priceToCoordinate(priceAtLv);
+            if (yLv === null) return;
+            ctx.beginPath();
+            ctx.strokeStyle = lv.color;
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(minX, yLv);
+            ctx.lineTo(maxX, yLv);
+            ctx.stroke();
+            ctx.fillStyle = lv.color;
+            ctx.fillText(`${lv.value} (${priceAtLv.toFixed(priceAtLv < 1 ? 5 : 2)})`, minX + 4, yLv - 3);
+          });
+        } else if (d.type === 'long' || d.type === 'short') {
+          const y3 = d.p3 !== undefined ? candleSeries.priceToCoordinate(d.p3) ?? y1 : y1;
+          const leftX = Math.min(x1, x2);
+          const rightX = Math.max(x1, x2, leftX + 60);
+          const boxW = rightX - leftX;
+
+          const tpTop = Math.min(y1, y3);
+          const tpH = Math.abs(y3 - y1);
+          ctx.fillStyle = 'rgba(8, 153, 129, 0.22)';
+          ctx.fillRect(leftX, tpTop, boxW, tpH);
+          ctx.strokeStyle = '#089981';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(leftX, tpTop, boxW, tpH);
+
+          const slTop = Math.min(y1, y2);
+          const slH = Math.abs(y2 - y1);
+          ctx.fillStyle = 'rgba(242, 54, 69, 0.22)';
+          ctx.fillRect(leftX, slTop, boxW, slH);
+          ctx.strokeStyle = '#f23645';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(leftX, slTop, boxW, slH);
+
+          ctx.beginPath();
+          ctx.strokeStyle = '#d1d4dc';
+          ctx.lineWidth = 1.5;
+          ctx.moveTo(leftX, y1);
+          ctx.lineTo(rightX, y1);
+          ctx.stroke();
+
+          const m = calcPositionMetrics(d);
+          const qtyStr = m.qty >= 100 ? m.qty.toFixed(1) : m.qty >= 1 ? m.qty.toFixed(3) : m.qty.toFixed(5);
+          const badgeText = `顆數: ${qtyStr} | R:R ${m.rr.toFixed(2)} | 風險 -$${m.riskUsd.toFixed(1)} | 保證金 $${m.marginUsd.toFixed(1)}`;
+          ctx.font = 'bold 11px sans-serif';
+          const textW = ctx.measureText(badgeText).width + 12;
+          const badgeY = d.type === 'long' ? tpTop - 20 : tpTop + tpH + 4;
+          ctx.fillStyle = 'rgba(30, 34, 45, 0.92)';
+          ctx.fillRect(leftX, badgeY, textW, 18);
+          ctx.strokeStyle = '#363a45';
+          ctx.strokeRect(leftX, badgeY, textW, 18);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(badgeText, leftX + 6, badgeY + 13);
+        }
+
+        if (isSel && !d.locked) {
+          ctx.setLineDash([]);
+          const drawHandle = (hx: number, hy: number, fill = '#ffffff') => {
+            ctx.beginPath();
+            ctx.arc(hx, hy, 5, 0, Math.PI * 2);
+            ctx.fillStyle = fill;
+            ctx.fill();
+            ctx.strokeStyle = '#2962ff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          };
+          drawHandle(x1, y1);
+          if (d.type !== 'hline') drawHandle(x2, y2);
+          if ((d.type === 'long' || d.type === 'short') && d.p3 !== undefined) {
+            const y3 = candleSeries.priceToCoordinate(d.p3);
+            if (y3 !== null) drawHandle(x2, y3, '#089981');
+          }
+        }
+      });
+
+      ctx.restore();
+    };
+
+    drawOverlayFnRef.current = drawOverlay;
+    if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      drawOverlayFnRef.current?.();
+    });
+  }, [bars, outputs, drawings, draftDrawing, cursorPt, selectedDrawingId, symbol, replaySelecting, hoverReplayX]);
+
+  return (
+    <div
+      ref={containerRef}
+      onContextMenu={(e) => { if (activeTool === 'path') e.preventDefault(); }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onDoubleClick={handleDoubleClick}
+      className={`relative w-full h-full overflow-hidden ${(activeTool !== 'cursor' || replaySelecting) ? 'cursor-crosshair' : ''}`}
+    >
+      <canvas ref={overlayRef} className="pointer-events-none absolute inset-0 z-10 w-full h-full" />
+    </div>
+  );
+};
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\DrawingSettingsModal.tsx ===
+import React from 'react';
+import { X, Lock, Unlock } from 'lucide-react';
+import {
+  DEFAULT_FIBO_LEVELS,
+  DEFAULT_POS_CONFIG,
+  DEFAULT_FRVP_CONFIG,
+  calcPositionMetrics,
+  type DrawingItem,
+  type PositionConfig,
+  type FrvpConfig,
+} from './ChartCanvas';
+
+interface Props {
+  drawing: DrawingItem;
+  symbol: string;
+  onUpdate: (d: DrawingItem) => void;
+  onSaveTemplate: () => void;
+  onClose: () => void;
+}
+
+export const DrawingSettingsModal: React.FC<Props> = ({ drawing, symbol, onUpdate, onSaveTemplate, onClose }) => {
+  return (
+    <div className="absolute top-14 left-1/2 -translate-x-1/2 z-40 w-[420px] max-h-[82%] overflow-y-auto bg-[#1e222d] border border-[#363a45] rounded-lg shadow-2xl p-4 text-xs">
+      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#2a2e39]">
+        <span className="font-bold text-sm text-white">
+          {drawing.type === 'text' && (
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="block text-[#787b86] mb-1">標註文字內容</label>
+            <input
+              autoFocus
+              value={drawing.text || ''}
+              onChange={(e) => onUpdate({ ...drawing, text: e.target.value })}
+              className="w-full bg-[#131722] text-white px-3 py-1.5 rounded border border-[#2a2e39] outline-none"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-[#787b86] mb-1">字體大小</label>
+              <select
+                value={drawing.fontSize || 13}
+                onChange={(e) => onUpdate({ ...drawing, fontSize: Number(e.target.value) })}
+                className="w-full bg-[#131722] text-white px-2 py-1.5 rounded border border-[#2a2e39] outline-none"
+              >
+                {[11, 12, 13, 14, 16, 18, 22].map((sz) => (
+                  <option key={sz} value={sz}>{sz}px</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[#787b86] mb-1">文字顏色</label>
+              <input
+                type="color"
+                value={drawing.color || '#ffffff'}
+                onChange={(e) => onUpdate({ ...drawing, color: e.target.value })}
+                className="w-full h-8 bg-transparent border-0 cursor-pointer"
+              />
+            </div>
+            <div>
+              <label className="block text-[#787b86] mb-1">標籤背景</label>
+              <select
+                value={drawing.bgColor || 'rgba(30, 34, 45, 0.88)'}
+                onChange={(e) => onUpdate({ ...drawing, bgColor: e.target.value })}
+                className="w-full bg-[#131722] text-white px-2 py-1.5 rounded border border-[#2a2e39] outline-none"
+              >
+                <option value="rgba(30, 34, 45, 0.88)">深灰底框</option>
+                <option value="rgba(41, 98, 255, 0.85)">藍色底框</option>
+                <option value="rgba(242, 54, 69, 0.85)">紅色底框</option>
+                <option value="transparent">無背景 (純文字)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {drawing.type === 'frvp' ? 'FRVP 固定範圍成交量分佈圖' :
+           drawing.type === 'text' ? '文字標註內容與樣式' :
+           drawing.type === 'path' ? '路徑 (Path) 樣式設定' :
+           drawing.type === 'fibo' ? '斐波那契回撤設定 (24 組自訂位)' :
+           drawing.type === 'long' ? '多頭倉位與顆數計算器' :
+           drawing.type === 'short' ? '空頭倉位與顆數計算器' : '繪圖樣式設定'}
+        </span>
+        <button onClick={onClose} className="text-[#787b86] hover:text-white cursor-pointer"><X size={16} /></button>
+      </div>
+
+      {/* 通用鎖定開關：適用於所有繪圖工具 */}
+      <div className="mb-3 pb-2.5 border-b border-[#2a2e39] flex items-center justify-between">
+        <span className="text-[#d1d4dc]">固定位置 (防止誤拖移動)</span>
+        <button
+          onClick={() => onUpdate({ ...drawing, locked: !drawing.locked })}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded cursor-pointer font-semibold ${
+            drawing.locked ? 'bg-[#ff9800]/20 text-[#ff9800] border border-[#ff9800]/40' : 'bg-[#2a2e39] text-[#d1d4dc]'
+          }`}
+        >
+          {drawing.locked ? <><Lock size={13} /> 已鎖定</> : <><Unlock size={13} /> 未鎖定</>}
+        </button>
+      </div>
+
+      {drawing.type === 'text' && (
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="block text-[#787b86] mb-1">標註文字內容</label>
+            <input
+              autoFocus
+              value={drawing.text || ''}
+              onChange={(e) => onUpdate({ ...drawing, text: e.target.value })}
+              className="w-full bg-[#131722] text-white px-3 py-1.5 rounded border border-[#2a2e39] outline-none"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-[#787b86] mb-1">字體大小</label>
+              <select
+                value={drawing.fontSize || 13}
+                onChange={(e) => onUpdate({ ...drawing, fontSize: Number(e.target.value) })}
+                className="w-full bg-[#131722] text-white px-2 py-1.5 rounded border border-[#2a2e39] outline-none"
+              >
+                {[11, 12, 13, 14, 16, 18, 22].map((sz) => (
+                  <option key={sz} value={sz}>{sz}px</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[#787b86] mb-1">文字顏色</label>
+              <input
+                type="color"
+                value={drawing.color || '#ffffff'}
+                onChange={(e) => onUpdate({ ...drawing, color: e.target.value })}
+                className="w-full h-8 bg-transparent border-0 cursor-pointer"
+              />
+            </div>
+            <div>
+              <label className="block text-[#787b86] mb-1">標籤背景</label>
+              <select
+                value={drawing.bgColor || 'rgba(30, 34, 45, 0.88)'}
+                onChange={(e) => onUpdate({ ...drawing, bgColor: e.target.value })}
+                className="w-full bg-[#131722] text-white px-2 py-1.5 rounded border border-[#2a2e39] outline-none"
+              >
+                <option value="rgba(30, 34, 45, 0.88)">深灰底框</option>
+                <option value="rgba(41, 98, 255, 0.85)">藍色底框</option>
+                <option value="rgba(242, 54, 69, 0.85)">紅色底框</option>
+                <option value="transparent">無背景 (純文字)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {drawing.type === 'frvp' && (() => {
+        const cfg = drawing.frvpConfig || DEFAULT_FRVP_CONFIG;
+        const updateFrvp = (patch: Partial<FrvpConfig>) => onUpdate({ ...drawing, frvpConfig: { ...cfg, ...patch } });
+        return (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[#d1d4dc]">行版面</span>
+              <span className="bg-[#131722] px-3 py-1.5 rounded border border-[#2a2e39] text-white w-44">行數</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#d1d4dc]">行數</span>
+              <input
+                type="number"
+                min={10}
+                max={500}
+                value={cfg.rows}
+                onChange={(e) => updateFrvp({ rows: parseInt(e.target.value, 10) || 200 })}
+                className="bg-[#131722] text-white px-3 py-1.5 rounded border border-[#2a2e39] outline-none font-mono w-44"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#d1d4dc]">成交量</span>
+              <select
+                value={cfg.volumeMode}
+                onChange={(e) => updateFrvp({ volumeMode: e.target.value as 'up_down' | 'total' })}
+                className="bg-[#131722] text-white px-3 py-1.5 rounded border border-[#2a2e39] outline-none w-44"
+              >
+                <option value="up_down">上/下</option>
+                <option value="total">總量</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[#d1d4dc]">數值區成交量 (%)</span>
+              <input
+                type="number"
+                min={10}
+                max={99}
+                value={cfg.vaPercent}
+                onChange={(e) => updateFrvp({ vaPercent: parseFloat(e.target.value) || 70 })}
+                className="bg-[#131722] text-white px-3 py-1.5 rounded border border-[#2a2e39] outline-none font-mono w-44"
+              />
+            </div>
+            <label className="flex items-center gap-2 text-white cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={cfg.extendRight}
+                onChange={(e) => updateFrvp({ extendRight: e.target.checked })}
+              />
+              <span>向右延伸</span>
+            </label>
+          </div>
+        );
+      })()}
+
+      {drawing.type === 'path' && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[#d1d4dc]">線形圖顏色與粗細</span>
+            <div className="flex items-center gap-2">
+              <input type="color" value={drawing.color} onChange={(e) => onUpdate({ ...drawing, color: e.target.value })} className="w-7 h-7 bg-transparent border-0 cursor-pointer" />
+              <select value={drawing.lineWidth} onChange={(e) => onUpdate({ ...drawing, lineWidth: Number(e.target.value) })} className="bg-[#131722] text-white px-2 py-1 rounded border border-[#2a2e39] outline-none">
+                <option value={1}>1px</option>
+                <option value={2}>2px</option>
+                <option value={3}>3px</option>
+              </select>
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-white cursor-pointer">
+            <input type="checkbox" checked={drawing.arrowEnd !== false} onChange={(e) => onUpdate({ ...drawing, arrowEnd: e.target.checked })} />
+            <span>終點顯示箭頭 (→)</span>
+          </label>
+          <label className="flex items-center gap-2 text-white cursor-pointer">
+            <input type="checkbox" checked={!!drawing.dashed} onChange={(e) => onUpdate({ ...drawing, dashed: e.target.checked })} />
+            <span>使用虛線樣式</span>
+          </label>
+        </div>
+      )}
+
+      {drawing.type === 'fibo' && (
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-white cursor-pointer">
+            <input type="checkbox" checked={!!drawing.extendRight} onChange={(e) => onUpdate({ ...drawing, extendRight: e.target.checked })} />
+            <span>水平線向右無限延伸</span>
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {(drawing.fiboLevels || DEFAULT_FIBO_LEVELS).map((lv, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 bg-[#131722] px-2 py-1 rounded border border-[#2a2e39]">
+                <input
+                  type="checkbox"
+                  checked={lv.enabled}
+                  onChange={(e) => {
+                    const next = [...(drawing.fiboLevels || DEFAULT_FIBO_LEVELS)];
+                    next[idx] = { ...lv, enabled: e.target.checked };
+                    onUpdate({ ...drawing, fiboLevels: next });
+                  }}
+                />
+                <input
+                  type="number"
+                  step="0.001"
+                  value={lv.value}
+                  onChange={(e) => {
+                    const next = [...(drawing.fiboLevels || DEFAULT_FIBO_LEVELS)];
+                    next[idx] = { ...lv, value: parseFloat(e.target.value) || 0 };
+                    onUpdate({ ...drawing, fiboLevels: next });
+                  }}
+                  className="w-full bg-transparent text-white font-mono outline-none"
+                />
+                <input
+                  type="color"
+                  value={lv.color}
+                  onChange={(e) => {
+                    const next = [...(drawing.fiboLevels || DEFAULT_FIBO_LEVELS)];
+                    next[idx] = { ...lv, color: e.target.value };
+                    onUpdate({ ...drawing, fiboLevels: next });
+                  }}
+                  className="w-4 h-4 bg-transparent border-0 cursor-pointer shrink-0"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(drawing.type === 'long' || drawing.type === 'short') && (() => {
+        const cfg = drawing.posConfig || DEFAULT_POS_CONFIG;
+        const m = calcPositionMetrics(drawing);
+        const updateCfg = (patch: Partial<PositionConfig>) => onUpdate({ ...drawing, posConfig: { ...cfg, ...patch } });
+
+        return (
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[#787b86] mb-1">帳戶大小 (USDT)</label>
+                <input type="number" value={cfg.accountSize} onChange={(e) => updateCfg({ accountSize: parseFloat(e.target.value) || 0 })} className="w-full bg-[#131722] text-white px-2.5 py-1.5 rounded border border-[#2a2e39] outline-none font-mono" />
+              </div>
+              <div>
+                <label className="block text-[#787b86] mb-1">槓桿倍數 (x)</label>
+                <input type="number" value={cfg.leverage} onChange={(e) => updateCfg({ leverage: parseFloat(e.target.value) || 1 })} className="w-full bg-[#131722] text-white px-2.5 py-1.5 rounded border border-[#2a2e39] outline-none font-mono" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[#787b86] mb-1">單筆風險數值</label>
+                <input type="number" step="0.1" value={cfg.riskValue} onChange={(e) => updateCfg({ riskValue: parseFloat(e.target.value) || 0 })} className="w-full bg-[#131722] text-white px-2.5 py-1.5 rounded border border-[#2a2e39] outline-none font-mono" />
+              </div>
+              <div>
+                <label className="block text-[#787b86] mb-1">風險計算單位</label>
+                <select value={cfg.riskMode} onChange={(e) => updateCfg({ riskMode: e.target.value as 'percent' | 'amount' })} className="w-full bg-[#131722] text-white px-2.5 py-1.5 rounded border border-[#2a2e39] outline-none">
+                  <option value="percent">帳戶百分比 (%)</option>
+                  <option value="amount">固定金額 (USDT)</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-1 border-t border-[#2a2e39]">
+              <div>
+                <label className="block text-[#787b86] mb-1">進場價</label>
+                <input type="number" step="any" value={drawing.p1} onChange={(e) => onUpdate({ ...drawing, p1: parseFloat(e.target.value) || 0 })} className="w-full bg-[#131722] text-white px-2 py-1 rounded border border-[#2a2e39] outline-none font-mono" />
+              </div>
+              <div>
+                <label className="block text-[#089981] mb-1">止盈價 (TP)</label>
+                <input type="number" step="any" value={drawing.p3 ?? drawing.p1} onChange={(e) => onUpdate({ ...drawing, p3: parseFloat(e.target.value) || 0 })} className="w-full bg-[#131722] text-white px-2 py-1 rounded border border-[#2a2e39] outline-none font-mono" />
+              </div>
+              <div>
+                <label className="block text-[#f23645] mb-1">止損價 (SL)</label>
+                <input type="number" step="any" value={drawing.p2} onChange={(e) => onUpdate({ ...drawing, p2: parseFloat(e.target.value) || 0 })} className="w-full bg-[#131722] text-white px-2 py-1 rounded border border-[#2a2e39] outline-none font-mono" />
+              </div>
+            </div>
+            <div className="bg-[#131722] border border-[#2962ff]/50 rounded p-3 flex flex-col gap-1.5">
+              <div className="flex justify-between items-center">
+                <span className="text-[#787b86]">建議下單顆數 (Qty)：</span>
+                <span className="text-base font-bold font-mono text-[#2962ff]">{m.qty.toFixed(4)} {symbol.replace('USDT', '')}</span>
+              </div>
+              <div className="flex justify-between"><span className="text-[#787b86]">風報比 (R:R)：</span><span className="font-mono text-white font-semibold">1 : {m.rr.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-[#787b86]">止損最大虧損：</span><span className="font-mono text-[#ef5350]">-${m.riskUsd.toFixed(2)} USDT</span></div>
+              <div className="flex justify-between"><span className="text-[#787b86]">止盈預期獲利：</span><span className="font-mono text-[#26a69a]">+${m.profitUsd.toFixed(2)} USDT</span></div>
+              <div className="flex justify-between"><span className="text-[#787b86]">合約價值 / 所需保證金：</span><span className="font-mono text-white">${m.notionalUsd.toFixed(1)} / ${m.marginUsd.toFixed(2)}</span></div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {(drawing.type === 'rect' || drawing.type === 'trendline' || drawing.type === 'hline') && (
+        <label className="flex items-center gap-2 text-white cursor-pointer">
+          <input type="checkbox" checked={!!drawing.dashed} onChange={(e) => onUpdate({ ...drawing, dashed: e.target.checked })} />
+          <span>使用虛線樣式</span>
+        </label>
+      )}
+
+      <div className="flex justify-end gap-2 mt-4 pt-2.5 border-t border-[#2a2e39]">
+        <button onClick={onSaveTemplate} className="px-3 py-1.5 bg-[#2a2e39] hover:bg-[#363a45] text-white rounded cursor-pointer">存為範本</button>
+        <button onClick={onClose} className="px-4 py-1.5 bg-[#2962ff] hover:bg-[#1e53e5] text-white font-semibold rounded cursor-pointer">確認</button>
+      </div>
+    </div>
+  );
+};
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\index.css ===
+@import "tailwindcss";
+
+=== FILE: C:\Users\alvin\trading-war-room\src\indicatorEngine.ts ===
+export interface Bar {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume?: number;
+}
+
+export interface LineSegment {
+  t1: number;
+  p1: number;
+  t2: number;
+  p2: number;
+  color: string;
+  width: number;
+  dashed?: boolean;
+}
+
+export interface ChartLabel {
+  time: number;
+  price: number;
+  text: string;
+  color: string;
+}
+
+export interface PlotSeries {
+  id: string;
+  name: string;
+  color: string;
+  width: number;
+  data: { time: number; value: number }[];
+}
+
+export interface IndicatorOutput {
+  lines: LineSegment[];
+  labels: ChartLabel[];
+  plots: PlotSeries[];
+}
+
+export interface MultiLevelConfig {
+  tfMode: '固定時框' | '自動倍數';
+  showDash: boolean;
+  levels: { en: boolean; tf: string; mult: number; len: number; col: string; wid: number; smc: boolean }[];
+  boundaries: { show: boolean; src: number; col: string; wid: number; txt: string }[];
+  smcCfg: { show: boolean; max: number; colUp: string; colDn: string; colCh: string };
+}
+
+export interface IndicatorScript {
+  id: string;
+  name: string;
+  enabled: boolean;
+  code: string;
+  uiType?: 'multilevel';
+  multiLevelConfig?: MultiLevelConfig;
+}
+
+export const DEFAULT_MULTILEVEL_CONFIG: MultiLevelConfig = {
+  tfMode: '固定時框',
+  showDash: true,
+  levels: [
+    { en: false, tf: '15',  mult: 1,   len: 5, col: '#9598a1', wid: 1, smc: false },
+    { en: false, tf: '60',  mult: 4,   len: 5, col: '#ff9800', wid: 1, smc: false },
+    { en: true,  tf: '240', mult: 16,  len: 5, col: '#4caf50', wid: 2, smc: true  },
+    { en: true,  tf: 'D',   mult: 64,  len: 5, col: '#2962ff', wid: 2, smc: true  },
+    { en: false, tf: 'W',   mult: 256, len: 5, col: '#ab47bc', wid: 3, smc: false },
+  ],
+  boundaries: [
+    { show: false, src: 1, col: '#787b86', wid: 1, txt: '邊界15m' },
+    { show: false, src: 2, col: '#ff9800', wid: 1, txt: '邊界1H'  },
+    { show: true,  src: 3, col: '#089981', wid: 2, txt: '邊界4H'  },
+    { show: true,  src: 4, col: '#9c27b0', wid: 2, txt: '邊界D'   },
+    { show: false, src: 5, col: '#880e4f', wid: 3, txt: '邊界W'   },
+  ],
+  smcCfg: {
+    show: true,
+    max: 50,
+    colUp: '#4caf50',
+    colDn: '#f23645',
+    colCh: '#e040fb',
+  },
+};
+
+export interface LevelCalcResult {
+  segments: { t1: number; p1: number; t2: number; p2: number }[];
+  lastT: number;
+  lastP: number;
+  extT: number;
+  extP: number | null;
+  structTopT: number;
+  structTopP: number | null;
+  structBotT: number;
+  structBotP: number | null;
+  smcEvents: { startT: number; endT: number; price: number; isCH: boolean; isUp: boolean }[];
+}
+
+export function calcLevelData(bars: Bar[], len: number): LevelCalcResult {
+  const res: LevelCalcResult = {
+    segments: [],
+    lastT: 0,
+    lastP: 0,
+    extT: 0,
+    extP: null,
+    structTopT: 0,
+    structTopP: null,
+    structBotT: 0,
+    structBotP: null,
+    smcEvents: [],
+  };
+  if (!bars || bars.length < len * 2 + 2) return res;
+
+  let dir = 0;
+  let lastT: number | null = null, lastP: number | null = null;
+  let prevT: number | null = null, prevP: number | null = null;
+
+  let swH: number | null = null, swHT = 0, hBroken = true;
+  let swL: number | null = null, swLT = 0, lBroken = true;
+  let trend = 0;
+
+  let structTopP: number | null = null, structTopT = 0;
+  let structBotP: number | null = null, structBotT = 0;
+  let needTopUpdate = false;
+  let needBotUpdate = false;
+
+  let extP: number | null = null;
+  let extT = 0;
+
+  const segMap = new Map<number, { t1: number; p1: number; t2: number; p2: number }>();
+
+  for (let i = len * 2; i < bars.length; i++) {
+    const pIdx = i - len;
+    const candH = bars[pIdx].high;
+    const candL = bars[pIdx].low;
+    const candT = bars[pIdx].time;
+
+    let isPH = true;
+    let isPL = true;
+    for (let j = pIdx - len; j <= pIdx + len; j++) {
+      if (j === pIdx) continue;
+      if (bars[j].high >= candH) isPH = false;
+      if (bars[j].low <= candL) isPL = false;
+    }
+
+    const recordSegment = () => {
+      if (lastT !== null && lastP !== null && prevT !== null && prevP !== null && lastT > prevT) {
+        segMap.set(prevT, { t1: prevT, p1: prevP, t2: lastT, p2: lastP });
+      }
+    };
+
+    if (isPH) {
+      if (dir === 1 && lastP !== null) {
+        if (candH > lastP) {
+          lastP = candH; lastT = candT;
+          swH = candH; swHT = candT; hBroken = false;
+          extP = bars[i].low; extT = bars[i].time;
+          recordSegment();
+        }
+      } else {
+        prevP = lastP; prevT = lastT;
+        lastP = candH; lastT = candT;
+        dir = 1;
+        swH = candH; swHT = candT; hBroken = false;
+        extP = bars[i].low; extT = bars[i].time;
+        if (structTopP === null) { structTopP = candH; structTopT = candT; }
+        recordSegment();
+      }
+
+      if (needTopUpdate && trend === -1 && structTopP !== null && candH < structTopP) {
+        structTopP = candH;
+        structTopT = candT;
+        needTopUpdate = false;
+      }
+    }
+
+    if (isPL) {
+      if (dir === -1 && lastP !== null) {
+        if (candL < lastP) {
+          lastP = candL; lastT = candT;
+          swL = candL; swLT = candT; lBroken = false;
+          extP = bars[i].high; extT = bars[i].time;
+          recordSegment();
+        }
+      } else {
+        prevP = lastP; prevT = lastT;
+        lastP = candL; lastT = candT;
+        dir = -1;
+        swL = candL; swLT = candT; lBroken = false;
+        extP = bars[i].high; extT = bars[i].time;
+        if (structBotP === null) { structBotP = candL; structBotT = candT; }
+        recordSegment();
+      }
+
+      if (needBotUpdate && trend === 1 && structBotP !== null && candL > structBotP) {
+        structBotP = candL;
+        structBotT = candT;
+        needBotUpdate = false;
+      }
+    }
+
+    const cur = bars[i];
+    if (dir === 1) {
+      if (extP === null || cur.low < extP) { extP = cur.low; extT = cur.time; }
+    } else if (dir === -1) {
+      if (extP === null || cur.high > extP) { extP = cur.high; extT = cur.time; }
+    }
+
+    if (swH !== null && !hBroken && cur.close > swH) {
+      hBroken = true;
+      const isCH = trend === -1;
+      trend = 1;
+      res.smcEvents.push({ startT: swHT, endT: cur.time, price: swH, isCH, isUp: true });
+      if (swL !== null) { structBotP = swL; structBotT = swLT; }
+      structTopP = cur.high; structTopT = cur.time;
+      needBotUpdate = true;
+      needTopUpdate = false;
+    }
+
+    if (swL !== null && !lBroken && cur.close < swL) {
+      lBroken = true;
+      const isCH = trend === 1;
+      trend = -1;
+      res.smcEvents.push({ startT: swLT, endT: cur.time, price: swL, isCH, isUp: false });
+      if (swH !== null) { structTopP = swH; structTopT = swHT; }
+      structBotP = cur.low; structBotT = cur.time;
+      needTopUpdate = true;
+      needBotUpdate = false;
+    }
+
+    if (trend === -1 && structBotP !== null && cur.low < structBotP) { structBotP = cur.low; structBotT = cur.time; }
+    if (trend === 1 && structTopP !== null && cur.high > structTopP) { structTopP = cur.high; structTopT = cur.time; }
+  }
+
+  res.segments = Array.from(segMap.values());
+  res.lastT = lastT ?? 0;
+  res.lastP = lastP ?? 0;
+  res.extT = extT;
+  res.extP = extP;
+  res.structTopT = structTopT;
+  res.structTopP = structTopP;
+  res.structBotT = structBotT;
+  res.structBotP = structBotP;
+  return res;
+}
+
+function calcEMA(vals: number[], len: number): number[] {
+  const k = 2 / (len + 1);
+  const out: number[] = [];
+  let prev = vals[0] ?? 0;
+  for (let i = 0; i < vals.length; i++) {
+    prev = i === 0 ? vals[0] : vals[i] * k + prev * (1 - k);
+    out.push(prev);
+  }
+  return out;
+}
+
+function calcSMA(vals: number[], len: number): number[] {
+  const out: number[] = [];
+  let sum = 0;
+  for (let i = 0; i < vals.length; i++) {
+    sum += vals[i];
+    if (i >= len) sum -= vals[i - len];
+    out.push(i >= len - 1 ? sum / len : sum / (i + 1));
+  }
+  return out;
+}
+
+function calcATR(bars: Bar[], len: number): number[] {
+  const tr: number[] = [];
+  for (let i = 0; i < bars.length; i++) {
+    if (i === 0) tr.push(bars[i].high - bars[i].low);
+    else {
+      const pc = bars[i - 1].close;
+      tr.push(Math.max(bars[i].high - bars[i].low, Math.abs(bars[i].high - pc), Math.abs(bars[i].low - pc)));
+    }
+  }
+  return calcEMA(tr, len);
+}
+
+export function runIndicatorScript(
+  script: IndicatorScript,
+  bars: Bar[],
+  barsHTF: Bar[],
+  mtfBarsMap: Record<string, Bar[]> = {}
+): IndicatorOutput {
+  const output: IndicatorOutput = { lines: [], labels: [], plots: [] };
+  if (!bars || bars.length === 0) return output;
+  const closes = bars.map((b) => b.close);
+
+  const getBarsByTf = (tfCode: string): Bar[] => {
+    const mapKey: Record<string, string> = {
+      '15': '15m', '15m': '15m',
+      '60': '1h', '1h': '1h', '1H': '1h',
+      '240': '4h', '4h': '4h', '4H': '4h',
+      'D': '1d', '1d': '1d', '1D': '1d',
+      'W': '1w', '1w': '1w', '1W': '1w',
+    };
+    const k = mapKey[tfCode];
+    if (k && mtfBarsMap[k] && mtfBarsMap[k].length >= 15) return mtfBarsMap[k];
+    return bars;
+  };
+
+  const runMultiLevelPath = (cfg: MultiLevelConfig) => {
+    const levelResults: LevelCalcResult[] = cfg.levels.map((lv) => {
+      const targetBars = cfg.tfMode === '自動倍數' ? bars : getBarsByTf(lv.tf);
+      const targetLen = cfg.tfMode === '自動倍數' ? lv.len * lv.mult : lv.len;
+      const data = calcLevelData(targetBars, targetLen);
+
+      if (lv.en) {
+        for (const seg of data.segments) {
+          output.lines.push({
+            t1: seg.t1, p1: seg.p1,
+            t2: seg.t2, p2: seg.p2,
+            color: lv.col, width: lv.wid,
+          });
+        }
+        if (cfg.showDash && data.lastT > 0 && data.extP !== null && data.extT >= data.lastT) {
+          output.lines.push({
+            t1: data.lastT, p1: data.lastP,
+            t2: data.extT, p2: data.extP,
+            color: lv.col, width: lv.wid, dashed: true,
+          });
+        }
+      }
+
+      if (cfg.smcCfg.show && lv.smc) {
+        const recentEvents = data.smcEvents.slice(-cfg.smcCfg.max);
+        for (const ev of recentEvents) {
+          const cSmc = ev.isCH ? cfg.smcCfg.colCh : (ev.isUp ? cfg.smcCfg.colUp : cfg.smcCfg.colDn);
+          output.lines.push({ t1: ev.startT, p1: ev.price, t2: ev.endT, p2: ev.price, color: cSmc, width: 1 });
+          output.labels.push({
+            time: Math.floor((ev.startT + ev.endT) / 2),
+            price: ev.price,
+            text: ev.isCH ? 'CH' : 'B',
+            color: cSmc,
+          });
+        }
+      }
+
+      return data;
+    });
+
+    const lastBar = bars[bars.length - 1];
+    const step = bars.length > 1 ? bars[1].time - bars[0].time : 900;
+    const endT = lastBar.time + step * 22;
+    const midT = Math.floor((lastBar.time + endT) / 2);
+
+    cfg.boundaries.forEach((bnd) => {
+      if (!bnd.show) return;
+      const srcData = levelResults[bnd.src - 1];
+      if (!srcData || srcData.structTopP === null || srcData.structBotP === null) return;
+      output.lines.push({ t1: srcData.structTopT, p1: srcData.structTopP, t2: endT, p2: srcData.structTopP, color: bnd.col, width: bnd.wid });
+      output.lines.push({ t1: srcData.structBotT, p1: srcData.structBotP, t2: endT, p2: srcData.structBotP, color: bnd.col, width: bnd.wid });
+      output.labels.push({ time: midT, price: srcData.structTopP, text: bnd.txt, color: bnd.col });
+      output.labels.push({ time: midT, price: srcData.structBotP, text: bnd.txt, color: bnd.col });
+    });
+  };
+
+  // 若為圖形化設定版《級別路徑》，直接讀取最新 UI 勾選狀態執行
+  if (script.uiType === 'multilevel') {
+    runMultiLevelPath(script.multiLevelConfig || DEFAULT_MULTILEVEL_CONFIG);
+    return output;
+  }
+
+  const sdk = {
+    bars,
+    barsHTF,
+    mtfBarsMap,
+    closes,
+    runMultiLevelPath,
+    ema: calcEMA,
+    sma: calcSMA,
+    atr: calcATR,
+    plotSeries: (name: string, values: number[], color = '#2962ff', width = 2) => {
+      const data = bars.map((b, idx) => ({ time: b.time, value: values[idx] ?? b.close }));
+      output.plots.push({ id: `${name}_${output.plots.length}`, name, color, width, data });
+    },
+    drawLine: (t1: number, p1: number, t2: number, p2: number, opts?: { color?: string; width?: number; dashed?: boolean }) => {
+      output.lines.push({ t1, p1, t2, p2, color: opts?.color || '#4caf50', width: opts?.width || 2, dashed: opts?.dashed });
+    },
+    drawLabel: (time: number, price: number, text: string, color = '#ffffff') => {
+      output.labels.push({ time, price, text, color });
+    },
+    plotEMA: (period: number, color = '#2962ff', width = 2) => {
+      const vals = calcEMA(closes, period);
+      const data = bars.map((b, i) => ({ time: b.time, value: vals[i] }));
+      output.plots.push({ id: `ema_${period}`, name: `EMA ${period}`, color, width, data });
+    },
+    plotSMA: (period: number, color = '#ff9800', width = 2) => {
+      const vals = calcSMA(closes, period);
+      const data = bars.map((b, i) => ({ time: b.time, value: vals[i] }));
+      output.plots.push({ id: `sma_${period}`, name: `SMA ${period}`, color, width, data });
+    },
+    mergeOutput: (sub: IndicatorOutput) => {
+      output.lines.push(...sub.lines);
+      output.labels.push(...sub.labels);
+      output.plots.push(...sub.plots);
+    }
+  };
+
+  const fn = new Function('sdk', script.code);
+  fn(sdk);
+  return output;
+}
+
+export const DEFAULT_INDICATORS: IndicatorScript[] = [
+  {
+    id: 'ind_structure_v6',
+    name: '級別路徑 (最終定案完整版)',
+    enabled: true,
+    uiType: 'multilevel',
+    multiLevelConfig: DEFAULT_MULTILEVEL_CONFIG,
+    code: '// 本指標已升級為圖形化參數面板，請點擊上方齒輪 (⚙️) 圖示直接勾選設定'
+  },
+  {
+    id: 'ind_dual_ma_atr',
+    name: '雙均線 + ATR 波動帶 (EMA 20 / EMA 60)',
+    enabled: false,
+    code: `const fast = sdk.ema(sdk.closes, 20);
+const slow = sdk.ema(sdk.closes, 60);
+const atr14 = sdk.atr(sdk.bars, 14);
+
+sdk.plotSeries('EMA20', fast, '#ff9800', 2);
+sdk.plotSeries('EMA60', slow, '#00bcd4', 2);
+sdk.plotSeries('UpperATR', slow.map((v, i) => v + atr14[i] * 2), 'rgba(0, 188, 212, 0.35)', 1);
+sdk.plotSeries('LowerATR', slow.map((v, i) => v - atr14[i] * 2), 'rgba(0, 188, 212, 0.35)', 1);`
+  }
+];
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\IndicatorSettingsModal.tsx ===
+import React, { useState } from 'react';
+import { X, RotateCcw } from 'lucide-react';
+import {
+  DEFAULT_MULTILEVEL_CONFIG,
+  type IndicatorScript,
+  type MultiLevelConfig,
+} from './indicatorEngine';
+
+interface Props {
+  script: IndicatorScript;
+  onUpdate: (updated: IndicatorScript) => void;
+  onClose: () => void;
+}
+
+export const IndicatorSettingsModal: React.FC<Props> = ({ script, onUpdate, onClose }) => {
+  const [tab, setTab] = useState<'levels' | 'boundaries' | 'smc'>('levels');
+  const cfg: MultiLevelConfig = script.multiLevelConfig || DEFAULT_MULTILEVEL_CONFIG;
+
+  const updateCfg = (patch: Partial<MultiLevelConfig>) => {
+    onUpdate({
+      ...script,
+      uiType: 'multilevel',
+      multiLevelConfig: { ...cfg, ...patch },
+    });
+  };
+
+  const updateLevel = (idx: number, patch: Partial<MultiLevelConfig['levels'][0]>) => {
+    const next = [...cfg.levels];
+    next[idx] = { ...next[idx], ...patch };
+    updateCfg({ levels: next });
+  };
+
+  const updateBoundary = (idx: number, patch: Partial<MultiLevelConfig['boundaries'][0]>) => {
+    const next = [...cfg.boundaries];
+    next[idx] = { ...next[idx], ...patch };
+    updateCfg({ boundaries: next });
+  };
+
+  return (
+    <div className="absolute top-14 left-1/2 -translate-x-1/2 z-40 w-[520px] max-w-[95vw] max-h-[84%] flex flex-col bg-[#1e222d] border border-[#363a45] rounded-lg shadow-2xl text-xs">
+      {/* 標題列 */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2e39] shrink-0">
+        <span className="font-bold text-sm text-white">{script.name}</span>
+        <button onClick={onClose} className="text-[#787b86] hover:text-white cursor-pointer">
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* TradingView 風格分頁標籤 */}
+      <div className="flex items-center gap-4 px-4 pt-2 border-b border-[#2a2e39] text-xs shrink-0">
+        {[
+          { id: 'levels', label: '級別 1 ~ 5 設定' },
+          { id: 'boundaries', label: '邊界 1 ~ 5 設定' },
+          { id: 'smc', label: '結構突破 (B / CH)' },
+        ].map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id as any)}
+            className={`pb-2 font-semibold cursor-pointer border-b-2 transition-colors ${
+              tab === t.id ? 'border-[#2962ff] text-white' : 'border-transparent text-[#787b86] hover:text-white'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 內容捲動區 */}
+      <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-3">
+        {/* 1. 級別 1~5 與整體設定 */}
+        {tab === 'levels' && (
+          <>
+            <div className="flex items-center justify-between bg-[#131722] px-3 py-2 rounded border border-[#2a2e39]">
+              <div className="flex items-center gap-2">
+                <span className="text-[#787b86]">時框模式：</span>
+                <select
+                  value={cfg.tfMode}
+                  onChange={(e) => updateCfg({ tfMode: e.target.value as '固定時框' | '自動倍數' })}
+                  className="bg-[#1e222d] text-white px-2 py-1 rounded border border-[#2a2e39] outline-none cursor-pointer"
+                >
+                  <option value="固定時框">固定時框</option>
+                  <option value="自動倍數">自動倍數</option>
+                </select>
+              </div>
+
+              <label className="flex items-center gap-2 text-white cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={cfg.showDash}
+                  onChange={(e) => updateCfg({ showDash: e.target.checked })}
+                />
+                <span>顯示進行中段（極值虛線）</span>
+              </label>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {cfg.levels.map((lv, idx) => (
+                <div
+                  key={idx}
+                  className={`flex items-center justify-between gap-2 px-3 py-2 rounded border ${
+                    lv.en ? 'bg-[#131722] border-[#363a45]' : 'bg-[#131722]/40 border-[#2a2e39]/60 opacity-70'
+                  }`}
+                >
+                  <label className="flex items-center gap-2 font-semibold text-white cursor-pointer min-w-[78px]">
+                    <input
+                      type="checkbox"
+                      checked={lv.en}
+                      onChange={(e) => updateLevel(idx, { en: e.target.checked })}
+                    />
+                    <span>級別 {idx + 1}</span>
+                  </label>
+
+                  {cfg.tfMode === '固定時框' ? (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[#787b86]">時框</span>
+                      <select
+                        value={lv.tf}
+                        onChange={(e) => updateLevel(idx, { tf: e.target.value })}
+                        className="bg-[#1e222d] text-white px-2 py-1 rounded border border-[#2a2e39] outline-none cursor-pointer"
+                      >
+                        <option value="15">15分</option>
+                        <option value="60">1小時</option>
+                        <option value="240">4小時</option>
+                        <option value="D">日線 (D)</option>
+                        <option value="W">週線 (W)</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[#787b86]">倍數</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={lv.mult}
+                        onChange={(e) => updateLevel(idx, { mult: Math.max(1, parseInt(e.target.value, 10) || 1) })}
+                        className="w-16 bg-[#1e222d] text-white px-2 py-1 rounded border border-[#2a2e39] font-mono outline-none"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-1">
+                    <span className="text-[#787b86]">深度N</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={lv.len}
+                      onChange={(e) => updateLevel(idx, { len: Math.max(1, parseInt(e.target.value, 10) || 5) })}
+                      className="w-12 bg-[#1e222d] text-white px-2 py-1 rounded border border-[#2a2e39] font-mono outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      value={lv.col}
+                      onChange={(e) => updateLevel(idx, { col: e.target.value })}
+                      className="w-6 h-6 bg-transparent border-0 cursor-pointer"
+                      title="線段顏色"
+                    />
+                    <select
+                      value={lv.wid}
+                      onChange={(e) => updateLevel(idx, { wid: Number(e.target.value) })}
+                      className="bg-[#1e222d] text-white px-1.5 py-1 rounded border border-[#2a2e39] outline-none cursor-pointer"
+                      title="線寬"
+                    >
+                      <option value={1}>1px</option>
+                      <option value={2}>2px</option>
+                      <option value={3}>3px</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* 2. 邊界 1~5 設定 */}
+        {tab === 'boundaries' && (
+          <div className="flex flex-col gap-2">
+            {cfg.boundaries.map((bnd, idx) => (
+              <div
+                key={idx}
+                className={`flex items-center justify-between gap-2 px-3 py-2 rounded border ${
+                  bnd.show ? 'bg-[#131722] border-[#363a45]' : 'bg-[#131722]/40 border-[#2a2e39]/60 opacity-70'
+                }`}
+              >
+                <label className="flex items-center gap-2 font-semibold text-white cursor-pointer min-w-[74px]">
+                  <input
+                    type="checkbox"
+                    checked={bnd.show}
+                    onChange={(e) => updateBoundary(idx, { show: e.target.checked })}
+                  />
+                  <span>邊界 {idx + 1}</span>
+                </label>
+
+                <div className="flex items-center gap-1">
+                  <span className="text-[#787b86]">取級別</span>
+                  <select
+                    value={bnd.src}
+                    onChange={(e) => updateBoundary(idx, { src: Number(e.target.value) })}
+                    className="bg-[#1e222d] text-white px-2 py-1 rounded border border-[#2a2e39] outline-none cursor-pointer"
+                  >
+                    <option value={1}>級別 1</option>
+                    <option value={2}>級別 2</option>
+                    <option value={3}>級別 3</option>
+                    <option value={4}>級別 4</option>
+                    <option value={5}>級別 5</option>
+                  </select>
+                </div>
+
+                <input
+                  value={bnd.txt}
+                  onChange={(e) => updateBoundary(idx, { txt: e.target.value })}
+                  placeholder="標籤文字"
+                  className="w-24 bg-[#1e222d] text-white px-2 py-1 rounded border border-[#2a2e39] outline-none"
+                />
+
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="color"
+                    value={bnd.col}
+                    onChange={(e) => updateBoundary(idx, { col: e.target.value })}
+                    className="w-6 h-6 bg-transparent border-0 cursor-pointer"
+                  />
+                  <select
+                    value={bnd.wid}
+                    onChange={(e) => updateBoundary(idx, { wid: Number(e.target.value) })}
+                    className="bg-[#1e222d] text-white px-1.5 py-1 rounded border border-[#2a2e39] outline-none cursor-pointer"
+                  >
+                    <option value={1}>1px</option>
+                    <option value={2}>2px</option>
+                    <option value={3}>3px</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 3. 結構突破標記 (B=BOS / CH=CHOCH) */}
+        {tab === 'smc' && (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between bg-[#131722] px-3 py-2.5 rounded border border-[#2a2e39]">
+              <label className="flex items-center gap-2 font-semibold text-white cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={cfg.smcCfg.show}
+                  onChange={(e) => updateCfg({ smcCfg: { ...cfg.smcCfg, show: e.target.checked } })}
+                />
+                <span>顯示結構突破標記（B=BOS / CH=CHOCH）</span>
+              </label>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#787b86]">保留數量</span>
+                <input
+                  type="number"
+                  min={5}
+                  max={200}
+                  value={cfg.smcCfg.max}
+                  onChange={(e) => updateCfg({ smcCfg: { ...cfg.smcCfg, max: parseInt(e.target.value, 10) || 50 } })}
+                  className="w-16 bg-[#1e222d] text-white px-2 py-1 rounded border border-[#2a2e39] font-mono outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="bg-[#131722] px-3 py-2.5 rounded border border-[#2a2e39]">
+              <div className="text-[#787b86] mb-2">勾選要顯示 B / CH 突破標記的級別：</div>
+              <div className="flex items-center gap-4">
+                {cfg.levels.map((lv, idx) => (
+                  <label key={idx} className="flex items-center gap-1.5 text-white cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={lv.smc}
+                      onChange={(e) => updateLevel(idx, { smc: e.target.checked })}
+                    />
+                    <span>級別 {idx + 1}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5 bg-[#131722] px-3 py-2.5 rounded border border-[#2a2e39]">
+              <div className="flex items-center justify-between">
+                <span className="text-white font-semibold">B↑ 多頭突破</span>
+                <input
+                  type="color"
+                  value={cfg.smcCfg.colUp}
+                  onChange={(e) => updateCfg({ smcCfg: { ...cfg.smcCfg, colUp: e.target.value } })}
+                  className="w-6 h-6 bg-transparent border-0 cursor-pointer"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white font-semibold">B↓ 空頭跌破</span>
+                <input
+                  type="color"
+                  value={cfg.smcCfg.colDn}
+                  onChange={(e) => updateCfg({ smcCfg: { ...cfg.smcCfg, colDn: e.target.value } })}
+                  className="w-6 h-6 bg-transparent border-0 cursor-pointer"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white font-semibold">CH 結構反轉</span>
+                <input
+                  type="color"
+                  value={cfg.smcCfg.colCh}
+                  onChange={(e) => updateCfg({ smcCfg: { ...cfg.smcCfg, colCh: e.target.value } })}
+                  className="w-6 h-6 bg-transparent border-0 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 底部按鈕列 */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-[#2a2e39] shrink-0">
+        <button
+          onClick={() => updateCfg(JSON.parse(JSON.stringify(DEFAULT_MULTILEVEL_CONFIG)))}
+          className="flex items-center gap-1 text-[#787b86] hover:text-white cursor-pointer"
+          title="還原預設參數"
+        >
+          <RotateCcw size={13} /> <span>重設為預設值</span>
+        </button>
+        <button
+          onClick={onClose}
+          className="px-4 py-1.5 bg-[#2962ff] hover:bg-[#1e53e5] text-white font-semibold rounded cursor-pointer"
+        >
+          確認
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\main.tsx ===
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\useMarketData.ts ===
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { Bar } from './indicatorEngine';
+
+export interface TimeframeOption {
+  label: string;
+  apiInterval: string;
+  htfInterval: string;
+  sec: number;
+  aggregateDays?: number;
+}
+
+export interface TickerInfo {
+  lastPrice: number;
+  priceChange: number;
+  priceChangePercent: number;
+}
+
+export const TIMEFRAMES: TimeframeOption[] = [
+  { label: '1分', apiInterval: '1m', htfInterval: '5m', sec: 60 },
+  { label: '3分', apiInterval: '3m', htfInterval: '15m', sec: 180 },
+  { label: '5分', apiInterval: '5m', htfInterval: '15m', sec: 300 },
+  { label: '15分', apiInterval: '15m', htfInterval: '1h', sec: 900 },
+  { label: '30分', apiInterval: '30m', htfInterval: '2h', sec: 1800 },
+  { label: '1h', apiInterval: '1h', htfInterval: '4h', sec: 3600 },
+  { label: '2h', apiInterval: '2h', htfInterval: '8h', sec: 7200 },
+  { label: '3h', apiInterval: '3h', htfInterval: '12h', sec: 10800 },
+  { label: '4h', apiInterval: '4h', htfInterval: '1d', sec: 14400 },
+  { label: '6h', apiInterval: '6h', htfInterval: '1d', sec: 21600 },
+  { label: '12h', apiInterval: '12h', htfInterval: '3d', sec: 43200 },
+  { label: 'D', apiInterval: '1d', htfInterval: '3d', sec: 86400 },
+  { label: '3D', apiInterval: '3d', htfInterval: '1w', sec: 259200 },
+  { label: 'W', apiInterval: '1w', htfInterval: '1M', sec: 604800 },
+  { label: '18D', apiInterval: '1d', htfInterval: '1w', sec: 1555200, aggregateDays: 18 },
+  { label: 'M', apiInterval: '1M', htfInterval: '1M', sec: 2592000 },
+];
+
+function makeBarsContinuous(bars: Bar[]): Bar[] {
+  if (bars.length <= 1) return bars;
+  const out: Bar[] = [{ ...bars[0] }];
+  for (let i = 1; i < bars.length; i++) {
+    const prevClose = out[i - 1].close;
+    const cur = bars[i];
+    out.push({
+      time: cur.time,
+      open: prevClose,
+      high: Math.max(cur.high, prevClose),
+      low: Math.min(cur.low, prevClose),
+      close: cur.close,
+      volume: cur.volume,
+    });
+  }
+  return out;
+}
+
+function aggregateBarsByCount(dailyBars: Bar[], groupSize: number): Bar[] {
+  if (groupSize <= 1 || dailyBars.length === 0) return dailyBars;
+  const result: Bar[] = [];
+  for (let i = 0; i < dailyBars.length; i += groupSize) {
+    const chunk = dailyBars.slice(i, i + groupSize);
+    result.push({
+      time: chunk[0].time,
+      open: chunk[0].open,
+      high: Math.max(...chunk.map((b) => b.high)),
+      low: Math.min(...chunk.map((b) => b.low)),
+      close: chunk[chunk.length - 1].close,
+      volume: chunk.reduce((acc, b) => acc + (b.volume || 0), 0),
+    });
+  }
+  return makeBarsContinuous(result);
+}
+
+export function useMarketData(symbol: string, tf: TimeframeOption) {
+  const [allSymbols, setAllSymbols] = useState<string[]>(['BTCUSDT', 'ETHUSDT', 'XAUUSDT', 'SOLUSDT']);
+  const [bars, setBars] = useState<Bar[]>([]);
+  const [barsHTF, setBarsHTF] = useState<Bar[]>([]);
+  const [mtfBarsMap, setMtfBarsMap] = useState<Record<string, Bar[]>>({});
+  const [loadingBars, setLoadingBars] = useState(false);
+  const [tickersMap, setTickersMap] = useState<Record<string, TickerInfo>>({});
+  const [refreshingPairs, setRefreshingPairs] = useState(false);
+
+  const activeSymbolRef = useRef(symbol);
+  const activeTfRef = useRef(tf);
+  activeSymbolRef.current = symbol;
+  activeTfRef.current = tf;
+
+  const rawBarsRef = useRef<Bar[]>([]);
+  const isFetchingMoreRef = useRef(false);
+  const hasReachedEarliestRef = useRef(false);
+
+  const fetchAllSymbols = async () => {
+    setRefreshingPairs(true);
+    try {
+      const res = await fetch('/bitunix-api/api/v1/futures/market/trading_pairs');
+      const json = await res.json();
+      const list = json?.data || [];
+      if (Array.isArray(list) && list.length > 0) {
+        const bitunixSyms = list.map((i: any) => i.symbol).filter((s: string) => typeof s === 'string' && s.length > 0).sort();
+        setAllSymbols(bitunixSyms);
+      }
+    } catch {} finally {
+      setRefreshingPairs(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllSymbols();
+  }, []);
+
+  const fetchBatch = async (sym: string, interval: string, endMs?: number): Promise<Bar[]> => {
+    const endParam = endMs ? `&endTime=${endMs}` : '';
+    const res = await fetch(`/bitunix-api/api/v1/futures/market/kline?symbol=${sym}&interval=${interval}&limit=500${endParam}`);
+    const json = await res.json();
+    return (json?.data || [])
+      .map((k: any) => ({
+        time: Math.floor(Number(k.time) / 1000),
+        open: parseFloat(k.open),
+        high: parseFloat(k.high),
+        low: parseFloat(k.low),
+        close: parseFloat(k.close),
+        volume: parseFloat(k.baseVol || k.quoteVol || k.volume || k.vol || '1') || 1,
+      }))
+      .sort((a: Bar, b: Bar) => a.time - b.time);
+  };
+
+  const loadMoreHistory = useCallback(async () => {
+    if (isFetchingMoreRef.current || hasReachedEarliestRef.current || rawBarsRef.current.length === 0) return;
+    isFetchingMoreRef.current = true;
+    const targetSym = activeSymbolRef.current;
+    const targetTf = activeTfRef.current;
+
+    try {
+      const currentRaw = rawBarsRef.current;
+      const endMs = currentRaw[0].time * 1000 - 1000;
+      const chunk = await fetchBatch(targetSym, targetTf.apiInterval, endMs);
+      if (activeSymbolRef.current !== targetSym || activeTfRef.current.label !== targetTf.label) return;
+
+      const earliestBefore = currentRaw[0].time;
+      const olderOnly = chunk.filter((bar) => bar.time < earliestBefore);
+      if (olderOnly.length === 0) {
+        hasReachedEarliestRef.current = true;
+      } else {
+        const continuous = makeBarsContinuous([...olderOnly, ...currentRaw]);
+        rawBarsRef.current = continuous;
+        const finalBars = targetTf.aggregateDays ? aggregateBarsByCount(continuous, targetTf.aggregateDays) : continuous;
+        setBars(finalBars);
+      }
+    } catch {} finally {
+      isFetchingMoreRef.current = false;
+    }
+  }, []);
+
+  const applyLiveTick = (tickSymbol: string, price: number) => {
+    if (tickSymbol !== activeSymbolRef.current || !price || Number.isNaN(price)) return;
+    const curTf = activeTfRef.current;
+
+    const updateLast = (prev: Bar[], periodSec: number): Bar[] => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      if (last.close > 0 && (price > last.close * 5 || price < last.close * 0.2)) return prev;
+
+      const nowSec = Math.floor(Date.now() / 1000);
+      const bucket = Math.floor(nowSec / periodSec) * periodSec;
+
+      if (bucket > last.time && !curTf.aggregateDays) {
+        const openPrice = last.close;
+        return [...prev, { time: bucket, open: openPrice, high: Math.max(openPrice, price), low: Math.min(openPrice, price), close: price, volume: 0 }];
+      }
+
+      if (last.close === price && price <= last.high && price >= last.low) return prev;
+      const copy = prev.slice();
+      copy[copy.length - 1] = { ...last, close: price, high: Math.max(last.high, price), low: Math.min(last.low, price) };
+      return copy;
+    };
+
+    setBars((prev) => updateLast(prev, curTf.sec));
+    setBarsHTF((prev) => updateLast(prev, curTf.sec * 4));
+  };
+
+  useEffect(() => {
+    let closed = false;
+    const fetchBitunixTickers = async () => {
+      if (closed) return;
+      try {
+        const res = await fetch('/bitunix-api/api/v1/futures/market/tickers');
+        const json = await res.json();
+        const list = Array.isArray(json?.data) ? json.data : [];
+        if (list.length > 0 && !closed) {
+          const nextMap: Record<string, TickerInfo> = {};
+          for (const item of list) {
+            const sym = item.symbol;
+            const last = parseFloat(item.lastPrice || item.last || item.markPrice);
+            const open24 = parseFloat(item.open || item.openPrice);
+            let chg = parseFloat(item.priceChange || item.change);
+            let pct = parseFloat(item.priceChangePercent || item.changePercent || item.riseFallRate);
+            if (Number.isNaN(chg) && !Number.isNaN(last) && !Number.isNaN(open24)) chg = last - open24;
+            if (Number.isNaN(pct) && !Number.isNaN(chg) && !Number.isNaN(open24) && open24 !== 0) pct = (chg / open24) * 100;
+            else if (!Number.isNaN(pct) && Math.abs(pct) < 1 && item.riseFallRate !== undefined) pct *= 100;
+            if (sym && !Number.isNaN(last)) {
+              nextMap[sym] = { lastPrice: last, priceChange: Number.isNaN(chg) ? 0 : chg, priceChangePercent: Number.isNaN(pct) ? 0 : pct };
+            }
+          }
+          setTickersMap(nextMap);
+          const cur = activeSymbolRef.current;
+          if (nextMap[cur]) applyLiveTick(cur, nextMap[cur].lastPrice);
+        }
+      } catch {}
+    };
+    fetchBitunixTickers();
+    const timer = setInterval(fetchBitunixTickers, 2500);
+    return () => { closed = true; clearInterval(timer); };
+  }, []);
+
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    const targetSym = symbol;
+    try {
+      ws = new WebSocket('wss://fapi.bitunix.com/public/');
+      ws.onopen = () => ws?.send(JSON.stringify({ op: 'subscribe', args: [{ symbol: targetSym, ch: 'trade' }] }));
+      ws.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data);
+          const msgSym = msg?.symbol || msg?.arg?.symbol;
+          if (msgSym && msgSym !== targetSym) return;
+          const d = msg?.data;
+          if (Array.isArray(d) && d[0]?.p) applyLiveTick(targetSym, parseFloat(d[0].p));
+        } catch {}
+      };
+    } catch {}
+    return () => { if (ws && ws.readyState === WebSocket.OPEN) ws.close(); };
+  }, [symbol, tf]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setBars([]);
+    setBarsHTF([]);
+    rawBarsRef.current = [];
+    isFetchingMoreRef.current = false;
+    hasReachedEarliestRef.current = false;
+    setLoadingBars(true);
+
+    const fetchDeep = async (sym: string, interval: string, batches: number): Promise<Bar[]> => {
+      let combined: Bar[] = [];
+      let endMs: number | undefined;
+      for (let b = 0; b < batches; b++) {
+        const chunk = await fetchBatch(sym, interval, endMs);
+        if (chunk.length === 0) break;
+        combined = [...chunk, ...combined];
+        endMs = chunk[0].time * 1000 - 1000;
+      }
+      const map = new Map<number, Bar>();
+      for (const bar of combined) map.set(bar.time, bar);
+      return makeBarsContinuous(Array.from(map.values()).sort((a, b) => a.time - b.time));
+    };
+
+    (async () => {
+      try {
+        const [rawCur, rawHtf] = await Promise.all([
+          fetchDeep(symbol, tf.apiInterval, tf.aggregateDays ? 4 : 2),
+          fetchDeep(symbol, tf.htfInterval, 1),
+        ]);
+        if (!cancelled && activeSymbolRef.current === symbol) {
+          rawBarsRef.current = rawCur;
+          const finalCur = tf.aggregateDays ? aggregateBarsByCount(rawCur, tf.aggregateDays) : rawCur;
+          if (finalCur.length > 0) setBars(finalCur);
+          if (rawHtf.length > 0) setBarsHTF(rawHtf);
+        }
+
+        const mtfResults = await Promise.all([
+          fetchDeep(symbol, '4h', 1),
+          fetchDeep(symbol, '1d', 1),
+        ]);
+        if (!cancelled && activeSymbolRef.current === symbol) {
+          setMtfBarsMap({ '4h': mtfResults[0], '1d': mtfResults[1] });
+        }
+      } catch {} finally {
+        if (!cancelled) setLoadingBars(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [symbol, tf]);
+
+  return { allSymbols, bars, barsHTF, mtfBarsMap, loadingBars, tickersMap, refreshingPairs, fetchAllSymbols, loadMoreHistory };
+}
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\WatchlistPanel.tsx ===
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Plus, Search, ArrowUpDown, X, Flag, RefreshCw, Pencil, Trash2 } from 'lucide-react';
+import type { TickerInfo } from './useMarketData';
+
+export type FlagColor = 'red' | 'blue' | 'green' | 'yellow' | 'purple';
+
+export interface WatchlistGroup {
+  id: string;
+  name: string;
+  symbols: string[];
+}
+
+export const FLAG_DEFS: { id: FlagColor; label: string; hex: string }[] = [
+  { id: 'red', label: '紅色清單', hex: '#f23645' },
+  { id: 'blue', label: '藍色清單', hex: '#2962ff' },
+  { id: 'green', label: '綠色清單', hex: '#089981' },
+  { id: 'yellow', label: '黃色清單', hex: '#ff9800' },
+  { id: 'purple', label: '紫色清單', hex: '#9c27b0' },
+];
+
+const DEFAULT_WATCHLISTS: WatchlistGroup[] = [
+  { id: 'wl_main', name: '主力觀察 (Main)', symbols: ['BTCUSDT', 'ETHUSDT', 'XAUUSDT', 'SOLUSDT', 'ARMUSDT', 'ALABUSDT'] },
+  { id: 'wl_all', name: '全市場 (All)', symbols: [] },
+];
+
+function formatPrice(p: number | undefined): string {
+  if (p === undefined || Number.isNaN(p)) return '--';
+  const abs = Math.abs(p);
+  if (abs >= 1000) return p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (abs >= 1) return p.toFixed(4);
+  return p.toFixed(6);
+}
+
+interface Props {
+  symbol: string;
+  onSelectSymbol: (sym: string) => void;
+  allSymbols: string[];
+  tickersMap: Record<string, TickerInfo>;
+  flagsMap: Record<string, FlagColor>;
+  onToggleRedFlag: (e: React.MouseEvent, sym: string) => void;
+  onSetFlagColor: (sym: string, color: FlagColor | null) => void;
+  refreshingPairs: boolean;
+  onRefreshPairs: () => void;
+}
+
+export const WatchlistPanel: React.FC<Props> = React.memo(({
+  symbol, onSelectSymbol, allSymbols, tickersMap, flagsMap,
+  onToggleRedFlag, onSetFlagColor, refreshingPairs, onRefreshPairs
+}) => {
+  const [watchlists, setWatchlists] = useState<WatchlistGroup[]>(() => {
+    try {
+      const saved = localStorage.getItem('warroom_watchlists_v1');
+      if (saved) {
+        const list: WatchlistGroup[] = JSON.parse(saved).filter((w: WatchlistGroup) => w.id !== 'wl_gold');
+        if (list.length > 0) return list;
+      }
+    } catch {}
+    return DEFAULT_WATCHLISTS;
+  });
+
+  const [activeWlId, setActiveWlId] = useState<string>(() => {
+    const saved = localStorage.getItem('warroom_active_wl_v1');
+    return saved && saved !== 'wl_gold' ? saved : 'wl_main';
+  });
+
+  const [wlWidth, setWlWidth] = useState<number>(350);
+  const [wlFilter, setWlFilter] = useState<string>('');
+  const [addModalOpen, setAddModalOpen] = useState<boolean>(false);
+  const [addSearch, setAddSearch] = useState<string>('');
+  const [sortByChange, setSortByChange] = useState<'none' | 'desc' | 'asc'>('none');
+  const [flagPickerSym, setFlagPickerSym] = useState<string | null>(null);
+  const isResizingRef = useRef(false);
+
+  useEffect(() => { localStorage.setItem('warroom_watchlists_v1', JSON.stringify(watchlists)); }, [watchlists]);
+  useEffect(() => { localStorage.setItem('warroom_active_wl_v1', activeWlId); }, [activeWlId]);
+
+  useEffect(() => {
+    const close = () => setFlagPickerSym(null);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, []);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      const w = window.innerWidth - e.clientX;
+      if (w >= 260 && w <= 650) {
+        setWlWidth(w);
+        window.dispatchEvent(new Event('resize'));
+      }
+    };
+    const onUp = () => {
+      if (isResizingRef.current) {
+        isResizingRef.current = false;
+        document.body.style.cursor = 'default';
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, []);
+
+  const isFlagList = activeWlId.startsWith('flag_');
+  const activeFlagColor = isFlagList ? (activeWlId.replace('flag_', '') as FlagColor) : null;
+  const currentWatchlist = watchlists.find((w) => w.id === activeWlId) || watchlists[0];
+  const isCustomEditable = !isFlagList && activeWlId !== 'wl_all';
+
+  const displayedSymbols = useMemo(() => {
+    let base: string[] = [];
+    if (isFlagList && activeFlagColor) {
+      base = Object.entries(flagsMap).filter(([, c]) => c === activeFlagColor).map(([s]) => s);
+    } else if (activeWlId === 'wl_all') {
+      base = allSymbols;
+    } else {
+      base = currentWatchlist?.symbols || [];
+    }
+    const q = wlFilter.trim().toUpperCase();
+    let list = q ? base.filter((s) => s.includes(q)) : [...base];
+    if (sortByChange !== 'none') {
+      list.sort((a, b) => {
+        const pa = tickersMap[a]?.priceChangePercent ?? -9999;
+        const pb = tickersMap[b]?.priceChangePercent ?? -9999;
+        return sortByChange === 'desc' ? pb - pa : pa - pb;
+      });
+    }
+    return list;
+  }, [isFlagList, activeFlagColor, flagsMap, activeWlId, allSymbols, currentWatchlist, wlFilter, sortByChange, tickersMap]);
+
+  const handleCreateList = () => {
+    const name = prompt('請輸入新觀察清單名稱：');
+    if (!name?.trim()) return;
+    const id = `wl_${Date.now()}`;
+    setWatchlists([...watchlists, { id, name: name.trim(), symbols: ['BTCUSDT', 'ETHUSDT', 'XAUUSDT'] }]);
+    setActiveWlId(id);
+  };
+
+  const handleRenameList = () => {
+    if (!isCustomEditable || !currentWatchlist) return;
+    const nextName = prompt('修改觀察清單名稱：', currentWatchlist.name);
+    if (!nextName?.trim()) return;
+    setWatchlists(watchlists.map((w) => (w.id === activeWlId ? { ...w, name: nextName.trim() } : w)));
+  };
+
+  const handleDeleteList = () => {
+    if (!isCustomEditable || watchlists.length <= 2) return;
+    if (!confirm(`確定要刪除清單「${currentWatchlist.name}」嗎？`)) return;
+    const remaining = watchlists.filter((w) => w.id !== activeWlId);
+    setWatchlists(remaining);
+    setActiveWlId(remaining[0].id);
+  };
+
+  const handleToggleSym = (sym: string) => {
+    if (!isCustomEditable) return;
+    setWatchlists(watchlists.map((w) => w.id !== activeWlId ? w : {
+      ...w,
+      symbols: w.symbols.includes(sym) ? w.symbols.filter((s) => s !== sym) : [...w.symbols, sym],
+    }));
+  };
+
+  return (
+    <div style={{ width: wlWidth }} className="relative flex flex-col bg-[#131722] border-l border-[#2a2e39] shrink-0">
+      <div
+        onMouseDown={() => { isResizingRef.current = true; document.body.style.cursor = 'col-resize'; }}
+        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-[#2962ff] z-30"
+        title="左右拖曳調整寬度"
+      />
+
+      {/* 頂部自訂清單快捷標籤列 */}
+      <div className="flex items-center gap-1 px-2 py-1.5 bg-[#131722] border-b border-[#2a2e39] overflow-x-auto no-scrollbar">
+        {watchlists.filter((w) => w.id !== 'wl_all').map((w) => {
+          const active = activeWlId === w.id;
+          return (
+            <button
+              key={w.id}
+              onClick={() => setActiveWlId(w.id)}
+              className={`px-2 py-1 rounded text-[11px] shrink-0 cursor-pointer transition-colors ${
+                active ? 'bg-[#2962ff] text-white font-semibold' : 'bg-[#1e222d] text-[#787b86] hover:text-white'
+              }`}
+            >
+              {w.name}
+            </button>
+          );
+        })}
+        <button
+          onClick={() => setActiveWlId('wl_all')}
+          className={`px-2 py-1 rounded text-[11px] shrink-0 cursor-pointer ${
+            activeWlId === 'wl_all' ? 'bg-[#2962ff] text-white font-semibold' : 'bg-[#1e222d] text-[#787b86] hover:text-white'
+          }`}
+        >
+          全市場 ({allSymbols.length})
+        </button>
+      </div>
+
+      {/* 當前清單標題與操作列 */}
+      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#2a2e39] bg-[#1e222d] gap-1">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          {isFlagList && activeFlagColor && (
+            <Flag size={13} style={{ color: FLAG_DEFS.find((f) => f.id === activeFlagColor)?.hex, fill: FLAG_DEFS.find((f) => f.id === activeFlagColor)?.hex }} className="shrink-0" />
+          )}
+          <span className="text-white font-semibold text-xs truncate">
+            {isFlagList ? FLAG_DEFS.find((f) => f.id === activeFlagColor)?.label : currentWatchlist?.name}
+          </span>
+          {isCustomEditable && (
+            <>
+              <button onClick={handleRenameList} className="text-[#787b86] hover:text-white p-0.5 cursor-pointer" title="重新命名此清單">
+                <Pencil size={11} />
+              </button>
+              {watchlists.length > 2 && (
+                <button onClick={handleDeleteList} className="text-[#787b86] hover:text-[#ef5350] p-0.5 cursor-pointer" title="刪除此清單">
+                  <Trash2 size={11} />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {activeWlId === 'wl_all' && (
+            <button onClick={onRefreshPairs} className="p-1 hover:bg-[#2a2e39] rounded text-[#d1d4dc] cursor-pointer" title="重整全市場列表">
+              <RefreshCw size={13} className={refreshingPairs ? 'animate-spin text-[#2962ff]' : ''} />
+            </button>
+          )}
+          {isCustomEditable && (
+            <button onClick={() => setAddModalOpen(!addModalOpen)} className="p-1 hover:bg-[#2a2e39] rounded text-[#d1d4dc] cursor-pointer" title="新增商品到此清單">
+              <Plus size={15} />
+            </button>
+          )}
+          <button onClick={handleCreateList} className="text-[11px] px-1.5 py-0.5 bg-[#2a2e39] hover:bg-[#363a45] rounded text-[#d1d4dc] cursor-pointer">+清單</button>
+        </div>
+      </div>
+
+      {/* 多色旗幟快篩列 */}
+      <div className="flex items-center justify-between px-2.5 py-1 border-b border-[#2a2e39]/60 bg-[#1e222d]/50">
+        <div className="flex items-center gap-1.5">
+          {FLAG_DEFS.map((f) => {
+            const active = activeWlId === `flag_${f.id}`;
+            const count = Object.values(flagsMap).filter((c) => c === f.id).length;
+            return (
+              <button key={f.id} onClick={() => setActiveWlId(`flag_${f.id}`)} className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] cursor-pointer ${active ? 'bg-[#2a2e39] text-white ring-1 ring-white/30' : 'hover:bg-[#2a2e39]/60 text-[#787b86]'}`}>
+                <Flag size={11} style={{ color: f.hex, fill: f.hex }} /><span>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+        <span className="text-[10px] text-[#787b86]">{displayedSymbols.length} 檔</span>
+      </div>
+
+      {addModalOpen && isCustomEditable && (
+        <div className="p-2 bg-[#1e222d] border-b border-[#2a2e39] flex flex-col gap-1.5">
+          <div className="flex justify-between text-[11px] text-[#787b86]">
+            <span>加入至「{currentWatchlist.name}」</span>
+            <button onClick={() => setAddModalOpen(false)} className="hover:text-white cursor-pointer"><X size={13} /></button>
+          </div>
+          <input autoFocus value={addSearch} onChange={(e) => setAddSearch(e.target.value)} placeholder="搜尋代號 (如 BTC, XAU, SOL)..." className="w-full bg-[#131722] text-white text-xs px-2 py-1 rounded border border-[#2a2e39] outline-none" />
+          <div className="max-h-36 overflow-y-auto flex flex-col gap-0.5">
+            {allSymbols.filter((s) => s.includes(addSearch.trim().toUpperCase())).slice(0, 40).map((s) => {
+              const added = currentWatchlist.symbols.includes(s);
+              return (
+                <button key={s} onClick={() => handleToggleSym(s)} className="flex justify-between px-2 py-1 text-xs rounded hover:bg-[#2a2e39] cursor-pointer">
+                  <span>{s}.P</span>
+                  <span className={added ? 'text-[#4caf50]' : 'text-[#787b86]'}>{added ? '✓ 已加入' : '+ 加入'}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-[#2a2e39]/60">
+        <Search size={12} className="text-[#787b86]" />
+        <input value={wlFilter} onChange={(e) => setWlFilter(e.target.value)} placeholder="篩選清單內商品..." className="w-full bg-transparent text-xs text-white outline-none" />
+        {wlFilter && <button onClick={() => setWlFilter('')} className="text-[#787b86] hover:text-white cursor-pointer"><X size={12} /></button>}
+      </div>
+
+      <div className="grid grid-cols-12 gap-1 px-2.5 py-1.5 text-[11px] text-[#787b86] border-b border-[#2a2e39]">
+        <div className="col-span-4 pl-4">商品</div>
+        <div className="col-span-3 text-right">最新價</div>
+        <div className="col-span-2 text-right">漲跌</div>
+        <button onClick={() => setSortByChange((p) => (p === 'none' ? 'desc' : p === 'desc' ? 'asc' : 'none'))} className="col-span-3 flex items-center justify-end gap-0.5 hover:text-white cursor-pointer">
+          <span>漲跌%</span><ArrowUpDown size={10} />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto divide-y divide-[#1e222d]">
+        {displayedSymbols.length === 0 && (
+          <div className="px-4 py-8 text-center text-xs text-[#787b86]">目前無標的，點上方「+」或切換至「全市場」標記旗幟即可加入！</div>
+        )}
+        {displayedSymbols.map((s) => {
+          const tk = tickersMap[s];
+          const isUp = (tk?.priceChangePercent ?? 0) >= 0;
+          const colorClass = tk ? (isUp ? 'text-[#26a69a]' : 'text-[#ef5350]') : 'text-[#787b86]';
+          const flagHex = FLAG_DEFS.find((f) => f.id === flagsMap[s])?.hex;
+
+          return (
+            <div key={s} onClick={() => onSelectSymbol(s)} className={`relative group grid grid-cols-12 gap-1 items-center px-2.5 py-2 text-xs cursor-pointer ${symbol === s ? 'bg-[#2a2e39]' : 'hover:bg-[#1e222d]'}`}>
+              <div className="col-span-4 flex items-center gap-1.5 min-w-0">
+                <button
+                  onClick={(e) => onToggleRedFlag(e, s)}
+                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setFlagPickerSym(flagPickerSym === s ? null : s); }}
+                  className={`shrink-0 cursor-pointer ${flagHex ? 'opacity-100' : 'opacity-25 group-hover:opacity-80'}`}
+                >
+                  <Flag size={12} style={{ color: flagHex || '#787b86', fill: flagHex || 'transparent' }} />
+                </button>
+                <span className="font-semibold text-white truncate">{s.replace('USDT', '')}</span>
+                <span className="text-[10px] text-[#787b86]">.P</span>
+              </div>
+
+              {flagPickerSym === s && (
+                <div onClick={(e) => e.stopPropagation()} className="absolute left-6 top-7 z-50 flex items-center gap-1.5 bg-[#1e222d] border border-[#363a45] rounded px-2 py-1.5 shadow-xl">
+                  {FLAG_DEFS.map((f) => (
+                    <button key={f.id} onClick={() => { onSetFlagColor(s, f.id); setFlagPickerSym(null); }} className="hover:scale-125 cursor-pointer">
+                      <Flag size={13} style={{ color: f.hex, fill: f.hex }} />
+                    </button>
+                  ))}
+                  <button onClick={() => { onSetFlagColor(s, null); setFlagPickerSym(null); }} className="text-[10px] text-[#787b86] hover:text-white pl-1 border-l border-[#2a2e39] cursor-pointer">清除</button>
+                </div>
+              )}
+
+              <div className={`col-span-3 text-right font-mono text-[11px] truncate ${colorClass}`}>{formatPrice(tk?.lastPrice)}</div>
+              <div className={`col-span-2 text-right font-mono text-[11px] truncate ${colorClass}`}>{tk ? (tk.priceChange >= 0 ? '+' : '') + formatPrice(tk.priceChange) : '--'}</div>
+              <div className="col-span-3 flex items-center justify-end gap-1">
+                <span className={`font-mono text-[11px] font-semibold ${colorClass}`}>{tk ? `${isUp ? '+' : ''}${tk.priceChangePercent.toFixed(2)}%` : '--'}</span>
+                {isCustomEditable && (
+                  <button onClick={(e) => { e.stopPropagation(); handleToggleSym(s); }} className="opacity-0 group-hover:opacity-100 text-[#787b86] hover:text-[#ef5350] cursor-pointer"><X size={12} /></button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+
+
+=== FILE: C:\Users\alvin\trading-war-room\src\assets\hero.png ===
+�PNG
+
+   IHDR  W  i   ���  �PLTE   ���~v�~v�pdu���������dZl���}u����~v�����������~v����w�\̀x����~w����������Q�}v�~v����V�~v����x��F����R����TNZ�~����g^p|u�OHU�x�I�YQ^���������|v�˱�}v�Z�|�x�xC�����x��a԰��\-�g�m�|Ċ��f4�}u�B�LEQ���q5��a�h�iׁHǟc�k�V(��X�r!ܯo�}.�m7��M�O��_�t۴}�[�o3����q�V�Y%�o�Q�Q�s0�fጅ�E�@9FX�J�h,äh�pE��H�:	�B�O��<�=��_ڋ5�r�O��d\j~:�g`mË�8	��H�:	�w�4{�O�~F��m�P�>
+�=
+��TϏS�@��[�LćM��I�}v��Q�4
+u�m�w�]�x>�{E��YΓW�w?��Kܘ[�v@�;|q7��g�a�iބB�G�A��N�U�0p}?ԅJ�~B��_�[(��_߮t�v:��Rܡf�Yɡe�d-�j5�D�p<�L��r�I�T�p9�v1�a-����^�Z�S �U%�K��D�Q�m�f�L��e�C��?�bތO�_�T�X"�Ì�|>ŝc�e4��V�k2�k5�J��o�D�D΁DƔU�N�t�:�]%�P��k�}�v9΄I�F��P�}�L�,gG~�J�_!��[�g,�ɔ��r��M̦c�p/�}+�h'�u7�{�n1�i ԰�����0�B   |tRNS ��p#� ��T�;é���*`YJA�C�d� �S#�20�>� �|c�A��߻���s��|u�o^Y_]���?�٤?�Ǯ���}d�kecۢ8��¬�s�����������Т����Ð�}4  /:IDATx���[��0�a�	!�DH���:m�HTQ%��f_�knݛ�� �6�tV`E��g �0�0c��S�٫��r�������l����6����u��-�Uvc'����n�т?��� �4�x�PS��у�x�[��� �.i[���DX�͏��S���>�\��d{��Ճ�,�mn�E����
+���H���Wؘ0x��'{b������W�X�`�3X�7�-21����`'��Ԅ��ݪ�G�?"�����V�`�pM�B#����9���J�=L�5��(Z]��(mW�>٬�`��K�Y��jϱ��Y擂s�IϳO��"X?��T.�K+mI��Oa���=��Cs�D�y)a�8�a.1[H��J`F����1K
+Z�`^^�{̆)O0�|�R}���[<Z�
+�Q߇�[��5���i��tt7p|iK@/a�I�v��s��J`-�c�9٬����׺�,I1ـ<6[,�� :����z/V~ѱK�t|�� ��]=��U��j{�>�"�|�f�Yqz�)��h�@n�K���|�H�k��R��?FXԐ+3#�V�����1�(FX�[���$���0}Ո�V�bxn�	�{�����@��V1�ʹ^G*iѪr��4�Am"f�
+g�%xfoO�z���>�@��:R�z�XWL��S&q7p�M���:g�U*Z��^��|+i�ꍵ��bs�W�@�o�]v[���0��n�1��@�k���!|��_B�UVRź��|���������%��� ��V�`�k��;fZh��5K������>{�H=��/*tEѪ�3�x{�gŬ����yR����xO�	ST��e��哮�9v�{�ڏ��]:,���w�*m	cղ��^MQچ�.�h����p��åXh��?r�.+T����E6���i�M."fO��T��K<�]���K��1�h�Z�`�??b�	z���D@?1���=�ʔW}�QK��a<2������m���u�8���8�Xu��%��[ěD�b3o0O2D@��O����.`ӫ�����A�����evM��R`T֭��p2�j���]�X�xfuKz^�.8��&-c��T�����[���Ղ4���6ÞJS�բ����QGV��5�!u4a#�k�ڭ�f�J[WPG�����b�&�,jꪺ�v|)����	A2U��Jv���Me�|�A���ᩯ5u��hE�6_������E/bMC����%gd��q�xk�X萡�����-[u!,�[n�ȩ�Yv����,;cy��P@]�U�)�O�z�j�C�î�c�.�Y�3�aoY։�;daLD�zU�j���a8n�{�ׁF*�{����xJ;��:#.�N���{�_)Y��3�X־�r�{�B�蠺��7�-�:�����?���������/	������}�w�kw
+��1��,����e���l�=�����$��\V9O�1�N�J����5��~ r�@6b�8*յ!ˮ�r;c�#���ݿi޹���٫�fo�*�ґ�[���CZ�klmӞ�I����==���i��g<��Qx��g}�֕|V+5�5%��Ƕ3�c{7�;����ZD�eȩv���VX�]��U�l2)b�DDz����'�T6�x1�̅k#e寇U�t߭O�YD9��evɗ�ڛҳ	-+��|��5����n��^��l�`�Q�����n�����O�\�EI�"��x`ծ׏���eD^��D�{̝av����ׇ�K�Wa�b�.�\��a�VR���o'�ؔ �K��t1���{.��F��)����b��J~4� �JT r���>�E��,d�S��J�KW(f�,�5>k��R�8
+�������@�d.���B��È�0��{���V�wS)Z�}�k�ɬcY{/����u v�]��[�����w��f�[� �+��X+$$3�[�e���En@2�Q�|PXUtK�c���ڊ^ڲX�������&�F��s�
+vy�]	�I ���0�2� d�yB��0�!�\{����]Lmk[`���Znǚ�}4�nI[�eӺV9�
+11�x�*40a��Ƥ���64�aUvu�c�M5�
+������xk[������`!i���<�}CQ���1�͓#�@<A���r,q��u����@��D�R���ZۙW�lLX�����|P3uϩ�5\6����`�dX(M�x����O	a4�ֈ��>om�f)���x]մހ�
+6�x]q���Щ���n6v����n�rL]�)��2�Ҟ��0М�s�8�[��&���k�M0��_4AL���C����g�M���Z�QPbi��Oa=̾�іe3z~�:�O���2m�_�A�䩁yB��2k�M+�n�V��~�M�C����̏|'����������̊���[[;��@u��ޣum2��@��=7�����$u5��=6+y����&=�:Vq��,t$�q��j�����t���Λ���#�YV>ih`{��{'璝�c��\����ӽ�ilJTX����y �+� `��T2��{=�i�+^��2[���'�I NZc�hԴb�����e�b9׶�b:%�h#K�wUU[�^w[�1����#gAz�L���`pB�^Ko���wN5i�,px��c:�S�om1�t��$�Q��K�sI��w6�IDQ>�2|�������&�� lp �$U2:�A�	��)"�FMX�ʭ+����]�c�O0čw4j�`<̝;-򬚒��x8��3�V�(���pe������dm�"�\��6�!)�6P/��m`0���QA�^�ŷ�������ϕ_��<�;�9�n`���|����mU��uFt�TٕV9.�Pw
+�����k_�4��Е	U�w
+s�w����曑�U[��b���6�m����ΑYS�AD~d՚����yh��[���.�Y��R�� CZ�]9�6 S��I�B~h�Y8Dƚ�n�a����S�-�J�[���s�.U-�kSp��ӎ�dYr��o=�������Z9��I��P�3F��'T�e[����� �x��+S��U�_`��A�SZ&���ucG�6�MY����z�\��(�%�}�d�É�p�s}hYL���u�Q�j�,��q#i��岼U���J�)�J~8me���?�ڳZ̀2�nAD�vm�/�>��,b�U$��Ԭ�t��Jj ��b��Ӭy6[Yn��N��732UR��'�-��pӬ#VG�ɪ��d��buIv�)A ����uں���@�F��I�Δ�t/Dr�>�َ#VE[MFA ;	�z�m��X��b�X�(`q4~#���.V7͚ͳ����V4u���O�Bڦ��6�t��s_��Q#s�I�?������-�h8	��d
+7j����a�#ֹ��3� ���Њ�lڏiV.8m��/ƭ,�A����@4�H�ɴ��T�1b�x~���f�S��.�j���\����\���|x �(�eS�'�A��U�a�"Wm ?΅o��,8�V~�-�s��u5���Cm�a.�Ī�/Ѓ���o��~���p�^��{�ѓm ?ѫ�������X������G �TR_��wO��m[�.�V�V���g���o*���,��ޘ��b�I� ��H��R�  zu��A��k�3ab�V'jjG�%��	b+Q�� �}�kx5���r��PVX�$�;�����֦d�)B�:��[��G��%�x���*u����u5�P�)5�b_b�������/��,�WQb=nT 8h�����躮hQ
+zu��S?r��
+�l�`Y���7��l{�{g��,�||V�4���EX.V����/4���A�z�ճ�����6��a9�t��Y�c��~�m�o/�S	�?��_�?z�n����޳d1��_-u���(�/�ݿkSQ���V� ox�>�K!��:h
+Qj���D$��/ĩ8��!"�"����dPi#c�G#�-��B����ڸ���֓�������\�9��6�Հռ;09|b���2����_2�LZ�v�g�g�<�3z���5�x�֙?��������pz���-wW�F�_9PKkN���(����|d��u_q�1ݓ쮉�L�l��D3{+�y=3fl����������n�#T�=j�h�{+�@�����Ļ �u�8��VA�%���\4�tX�vn4�/֝5k �
+C7�y�j=�Xn	磽���S��[̞a�h֠] �C��1��2Ҍ58W�+��f�F��g�1�؇#���aow�
+;��9��b��:�H�ZS�w]mu��_z����nboY�5�s-�k����x��g؝e�B�f���,ѶJv͵ݹ�HpG�Q��A�4rh���[�5P6��֗S�q��D<,�k�W�z�#�čF��Z*�vb4�o�@�}챠��^.ק)� ����c�u��V��;�H�ΖP
+���uGt�	F�1X(o ����\�b�ن�j�:�HOW�r�K��ॱ~]�r��6(o���ӻl���-��y �#,ז�K�͕��	��B�D��ZH%(ٍa��niUKO	O�j�F�7`��p�XAsm�<�8��|�v-1M�2���|���Oj����	O���Jp��T�W�q*�=N�3K])uW��W�k�	,�Y�k�u�<��+����X������V���-����@�>I��n4�ݡ�G�qOr^����"fњ��xaIki[���+JJY|�C�uƄju���b���V�5�]KYT��;�X�8��ag��ta��X���XI�!^��HDb#�N�V[�p8s\3c8L�cΠ͐��z�i��嶣�C���^�c�x���4�.�I~�����9?k���c��������R0>g���
+�V�?/�����A'^�b/�1���V#�,2��)���^��3���A�}G�GR�#O�;+c�<��  .9X����[���==�`���F`pG�A��K�����p�x>oB� � )�$`�t���C|�f���3��!T0��ᧅ�0B��`���㸕8m�ru�Slpg%p��P����N>l�������t��C�z��Wr�\|�@(�ou�z]|V~Z��4����nx�!T`���#�9C5͎�-���՜߆���!��P��P6^Jt�:�(�֠jn�{��BD�>��SqG�7�d�>yɵ�=&<�;�E0�.��01��ǲ֘t���
+	1ZTf�M�=z���2j,���]�)�9��\k;%v��\��ʙ��5"@�� �qh�!&���&�����ʔ�J�?:p{��^�� P�H�4������76eH��%��7�jw�����0����N�\tN$���6��A[�N�C��]L\�4h�`���gN.�0dȎ�ܥ�K_��jι�l���yQtyA�1�����@G�^O��5���b:q��j�Q��[�U�g�68�dhd��c�R�Ӄ�;{��z�_c�!�� ��@'���<��˵s�ŻEcg�ǀ�y5���\�ɣ��8=;ؗO�آ!���i���R��ԷfgȦ��C��.A��+�ʑ�];פ�Ԙ/��x#d�bj�5W�4��i��~K�����*�
+��l�.x�z$Rl6�}0'[��GY�B��wJ��-�� �nV�B��M��}Np)����0�?`4���+6�3׈�]�o
+�[�r��n��4�T�
+���O��K���lχ忴���T����(�i��F�h�j�{��QӹO��b$}��>h�N��L:�J�"�b�J�;���:M}���cv}.�l�c�%����n�(��m#�q������Qh�+���T*��w�?�b�sq��.y�� )�������JR�Uf���aLC�5s���bC�2����o� �ڒ�"��^Ӳ��?h���ݔ |<�5����͞��r"%$bkL��l�-�j�1��hRU��� ��X=�wN}�����&��{��I�ЫF�2�S�]*�s�� g�A�P3r������	�X"u$-���l��(��{{�P5MeHI��=��w����j6wU	iR���T�oYw*p7�r)Ҋ
+B:���g�I�	]�r�v{!r�&���Ŭ�i��L�4� �F�4��F�����޲�*�T@�$��$����W<��{�X,��τ��һV�$ؔ�S�m��.����l̘b��7�Q���GUUMڪ�Ju��c��l�E5.�s6'�䤽��#��{�T,�<��������NV�}�R~��A0����e�<��X��(�ǄV��,�Q�MEiﳩ�� �%�Ҽ�|�������hRJ�S��{G��V��x��D��i�H"!�������_�e^Jp�ǎ�/8�t*}7����K����*U5ն9�w�a.�G9�Cj��Iɖ�������[Ҋ�xI�9X1�[�ٽh�?��N�}�UA���R��e�U��z]��o�W%��h/M����!�_�;��8�����>���x� "�8#Dq߄!� ��5#�XuO��s�[���Zt�`���jK#���o�����vڷ�7��|��v{4���յƆL������4X���tK'���w���\]���ڜ#�.�nS�#���$��K+R�L�T:�c�Z����9?A�/`v����v�5`��N�)�Sמ<ִ�fY!j٘���]��O����zN��U��l�#xb�`RKj����4[fv�a<߶�'��"���4�P�w��?^֊��'ٔ�0��Ƚ����Z��ye�T� �����T_�9pr����3����`��]�9d��-�üW�_�;׭�/?֒QhJ|�#X���%gw���`��ɉ�R�+�W�t���
+��N�x� U:Vz�<7g1���n��l�0����ͩ�k�?y�����a��0b^-��W��O��U�����6Ǩ�k�[&ԯiH�[҇�~���h�1 ��[��8�n>w���Ѓ}p��˗�I�'�B(���E�J�����f������7���\�6�+ >׉U�i��'WAIP.?�qoȟ��{�!;�9��t&����cj5_�p�ub�}��f�Q�|���E��2��	�����X�c��:GuH�8����u��}ǎev��3W���_*�?�6����A�E��c�x�1�P��go��M����y�!����j���Ӯ����B����S����3�O����b���r�\޽��X�5+$�<!��@%d�4*$�����m�}�j���5*l�WT�a��0L/�Y�%�ʼ9�şU�!�>?ؕٻ�b���h����)<,b���wwu��A��ߤm�E���D0d[:�\�-Ř���0�O��M=X2�ş��%/ʥMG�E�A)�8���'�Gⲱ�(j�}wY�fu���W�]W�	?<i|RBp�D`�Hb���d���q;5�[���n=J�ӏ�_�\,|	�pP��� aJ=Bi�["��"7VwhFt�7���O�8yhW X�K�0��V_�z�f	���Ǉ��X���u(-_{�q1YL��e!쁡�
+`���5�zK�H��]�t�zw�;��k��KڪQ����b�(C��u �#lY?0 ���������P��h%>���O��V�|"�%�����2W����=�f�H��08c\�b�)���C� ��Z���[����D@,ߣ�gI*Œz��+�%Hhy\2.l�<�zwy`�ڵ�Ϊs��F��[�HQ�U�	�B(�X�~�,�����n*$�dE����"P�� P� �%������U���&�A���;L��<����D �lo0��l[q�h�"�6cZ��vbc-	�r�#,)��U�� aKS�D.�����}i�v��]��Ugmv�ge�)��ۍJ]���aTy�����?��Y�"ؓEO!��J\)8=�Г���_���?��;�|��sӄ��7˒y�����K��u��v�+�(����e�Tf�2BI��= ����/�tYN�������_�q��~g��6�Uϙٷ�f��Opՠޓ�{$cL�犻B�*�r4����y���
+b�b����(�o��|#�2��{u⟝��}�t�y~����k��םs�ܫ�w�a�\<?��W$�Mk��<ۣ��)��I��׸x$h�����	���<u�ի����6c�߹���ۨ޻i�W���Ͻo�\(y�}�� t�.�@-7�l���1%�.] A��c����o��O��s7رn.�?�����9�˨�ɫ;w�|���ͪ�����~��S!>5*�Vnl��߀y*!��-����z�wy��x��\''qA���X�EA��Ny�6Dh��bգU���+���]��(�M�z�
+-�4��V��7N�l���#�'�'��;f>`����hi��Ǐ��p[�aFD�P�����g��+�μ�8��g�\����v�eJ���}�*!7�f�KG/�[[�j�j��M(��5Bb�YAF\�3�<���u0��ȫ{��|��2g��)�5��g�G�ˆ��ג��um=����\.�U_�
+���q�O�
+Gi^$"�.�������s�b���
+�����fCw�E�~Y/��d�+ ��Y����-��V�2��پ� UR�L�(ǈG�k�n�ˬ\�/�O��]0v�|n:N�1������ix�o/��_&r���'���Xj�ێ��*B8s�J�\Pf���@��g^ֿ���4���I��8fѝ6Ɠ�e�dG.�E	ɮX�ƬbJIdφ�.4K"E�#�1�Er�"
+�-��GN���;{㥪���:2]w����*bq�w������j㲯E$[��2V��pR��  [ۜ>�{��=�n�jk��T�
+�4���w�hN����5��r���Q��jf7h�roɄ\|�U"�bS!B��6j�6��) S�-ίeWr��p�մ0N>�OG�nZ[�` �:s���7��DdI�f'I���oȥ�K;�J+�0�A�YMSk��!,x����V����'q�p=�?=��=�ۭ<9_�imͦ3�=Ej�%����s�ݣ�g$��9Q
++�6G�TT�?|�y�4�R�-4��<�]��?��ξ��@����:n��������3݄Bm����Ffwi�z�+S��� �%�~H�<|UBa���a
+$hZ��K�^ʵ 9��Ք�[o��Vo�=�
+���d>�'���
+�]�:����]��0�����~@�EAP�xCguvʐX�!i֤��/`i>[���G5�Bi���l�(�%g�����'�;�>�A���'�����ͧ���^v�$��(��ۼ�|�������v2���z ӬY�������j��3Im��[�9ĵ �:����۳�w�����y����p�5��	o#Q���������aD�������ε� Z�ȳF���n?��z����
+�6���3��$����o� ��~Z �6��)A:�>b�\)6�"#uw:5���}��y<c[��%��aL�ޛxR��W����g���X��e뷘��6C�&M��H�}��Q�#L�&Vr8�絆����\��5�2���`'�g`%6Q�i5�4��^��|>L>f�О�@��[}W-d��Qʈ*�u�Cj9=b����������g���c�^��[�a�%	���X^6pҸ�'[��
+x�[��-��E�&��
+ D���f�G��+ؘB`��yѹ����[�S�z4r���Q��WZ�3g��5������e5t�fA<��)DVRuNʙ�N+��T�E�LK�0�As�#���]��$�cSx�K� �8��Q���ǃ�j|��d<�=�xd���غ�K�Hx�Q�X��FH��(f�>���S���܅j�X�z ��cS�&ʍ���V��״e����sK�X���*q:�%N"���ZqC��E.W�97����p{Q�ȕ��=}����$k&$��@{��7��մ�d�K���9�zeU�fP*��OU�0�e9�ϊy��]��\��p���q�Jy�ѵ�{u�����o=(���{�������|���v�U����Vʁ���s5ձ����$eU�>�ˢ,�o�9��,�r7�'x\�w̠,���U8�~�3lM���g���<��^�0�ީ�YdU�y������8��^������윻��0����8�(N�� ���88H� �$�6$J
+5K�&�Gɠ\>���.]�.".�����<>thׇ����M�����e�$�@��A²l)���{�.lo�[�CC�N)VG�8�o�"���{s����,[۸��=��Z�6�-��Q�~��h�Y��r��׺�j�^���mUF6�1PJ%��O������n����2Z�a'�	;��?t���@9�U��[C��!����%���'��W�~�#�?C�/-���\�l�m�B��/7�7���	CM�F����*��ց�{��p�����9����i��d���<�N���z]bK����[w�<y�p5�گ?��ӵ��(��"�c:�i|��p�z�y��wg"	9g�}ad�B��##��	�`���h�괫�ܹ��!�b��ww7�_�OY�n�7���Mf[I0�鉤�wo=ؾ�]���u|�R���J  4F�aB�vKq"`�81�����l}N�c\�5V�OZO!��O��׳C����%rp�iI��av	�cy^n��6�q���!4�Vhc!���$�@6(t�)��j$]}����e�:��WϮ�����^��m�9kj�9��,����b�>h7y��um�H�V�F!`�(�JZ��P����@rJV��������̏x��o*Z��D�<�>��X�-6��e*��:h�sTP�'� �j�D@T�B���E=OS���u��8'/u�B���M�_Ю�.����Iϝ�w߮��
+���L�R����piB@�%a܋��#,'�s�Ma��M�\���g=�pRc�+v�mrLZt����.6�:챷I��g\�0 ��o�&0ƛr.��yܭ���M��
+��`�og�����U�n��MWnV_�~�=��4�Ć�7��@�q �;��U�҅s��@��M:t�Z��N!}~ǿ��W���]����j�K��͚nJ�mT8 $�rB�V�-����4-sW�uYt�E���m����.Gp��z-����x^m�4((���Y64�� + \9+�0@�BU#4�1y�הu뎋����~&�{Sz����
+�F����1aeC��$"@�VCc ,o�`�"�AE����S�}���5m�q�v.W�|�8y<N)��5p�`��0�~B�*��Х��H��J�%-�<ۮX� �'���-��m���s�<نF�!  ϊ�V�@Ҳ�e �8�-r[P��S�������#`Pw���}�b���P�HEi�mK �lc� 1؈ �@��)G?y_��m����6wǢC����'��ɉj���{�:��G %��t��uL��p�_�V���k���.��ian0V��ŭ�,�9e���ȁ[F�P<�e��f���Y�+��ߢc�%�k����`�l$@����,����"H5Goihcz����h�Z�v���b��%1V����J:8�IH�s�"bZh��֯�=�k7�51Rܛ�C�m�m 7 (����Zv��/�?Xߵoƨ1=�q�2ur nB��*u�2۩�X��Ѡ"(,3���n!��ʇH����G�qc�R�G��<k�͇���
+�� ��"�$Po	=�c�!�1B���z�7{X���, y!PA%C�葆	s�婪z	��9���i1�mv�/��t�cL,��� ���,�y�j��
+��9�%��Ie:�n�%x����z,�Q5)P����k��M��;i���1;�߮�nw�C��^��lt�*7�    IEND�B`�
+
+=== FILE: C:\Users\alvin\trading-war-room\src\assets\react.svg ===
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+
+=== FILE: C:\Users\alvin\trading-war-room\src\assets\vite.svg ===
+<svg xmlns="http://www.w3.org/2000/svg" width="77" height="47" fill="none" aria-labelledby="vite-logo-title" viewBox="0 0 77 47"><title id="vite-logo-title">Vite</title><style>.parenthesis{fill:#000}@media (prefers-color-scheme:dark){.parenthesis{fill:#fff}}</style><path fill="#9135ff" d="M40.151 45.71c-.663.844-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.493c-.92 0-1.457-1.04-.92-1.788l7.479-10.471c1.07-1.498 0-3.578-1.842-3.578H15.443c-.92 0-1.456-1.04-.92-1.788l9.696-13.576c.213-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.472c-1.07 1.497 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.087.89 1.83L40.153 45.712z"/><mask id="a" width="48" height="47" x="14" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M40.047 45.71c-.663.843-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.389c-.92 0-1.457-1.04-.92-1.788l7.479-10.472c1.07-1.497 0-3.578-1.842-3.578H15.34c-.92 0-1.456-1.04-.92-1.788l9.696-13.575c.213-.297.556-.474.92-.474H53.93c.92 0 1.456 1.04.92 1.788L47.37 13.03c-1.07 1.498 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.088.89 1.831L40.049 45.712z"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#eee6ff" rx="5.508" ry="14.704" transform="rotate(269.814 20.96 11.29)scale(-1 1)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#eee6ff" rx="10.399" ry="29.851" transform="rotate(89.814 -16.902 -8.275)scale(1 -1)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#8900ff" rx="5.508" ry="30.487" transform="rotate(89.814 -19.197 -7.127)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.928 4.177)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.738 5.52)scale(1 -1)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#eee6ff" rx="14.072" ry="22.078" transform="rotate(93.35 31.245 55.578)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx="14.592" cy="9.743" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(39.51 14.592 9.743)"/></g><g filter="url(#k)"><ellipse cx="61.728" cy="-5.321" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 61.728 -5.32)"/></g><g filter="url(#l)"><ellipse cx="55.618" cy="7.104" fill="#00c2ff" rx="5.971" ry="9.665" transform="rotate(37.892 55.618 7.104)"/></g><g filter="url(#m)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#n)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#o)"><ellipse cx="49.857" cy="30.678" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 49.857 30.678)"/></g><g filter="url(#p)"><ellipse cx="52.623" cy="33.171" fill="#00c2ff" rx="5.971" ry="15.297" transform="rotate(37.892 52.623 33.17)"/></g></g><path d="M6.919 0c-9.198 13.166-9.252 33.575 0 46.789h6.215c-9.25-13.214-9.196-33.623 0-46.789zm62.424 0h-6.215c9.198 13.166 9.252 33.575 0 46.789h6.215c9.25-13.214 9.196-33.623 0-46.789" class="parenthesis"/><defs><filter id="b" width="60.045" height="41.654" x="-5.564" y="16.92" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-40.407" y="-6.762" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-35.435" y="2.801" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-30.84" y="20.8" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-29.307" y="21.949" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="29.961" y="-17.13" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-13.43" y="-22.082" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="34.321" y="-37.644" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="38.847" y="-10.552" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="22.45" y="-1.645" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="32.919" y="11.36" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter></defs></svg>
+
+
