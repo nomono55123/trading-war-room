@@ -145,6 +145,29 @@ export const ChartCanvas: React.FC<Props> = ({
   const [cursorPt, setCursorPt] = useState<{ time: number; price: number } | null>(null);
   const [hoverReplayX, setHoverReplayX] = useState<number | null>(null);
 
+  const syncCrosshairToPoint = (
+    chart: IChartApi,
+    series: ISeriesApi<'Candlestick'>,
+    time: number,
+    price: number
+  ) => {
+    try {
+      const c = chart as any;
+      if (typeof c.setCrosshairPosition === "function") {
+        c.setCrosshairPosition(price, time as any, series);
+      }
+    } catch {}
+  };
+
+  const clearSyncedCrosshair = (chart: IChartApi | null) => {
+    try {
+      const c = chart as any;
+      if (c && typeof c.clearCrosshairPosition === "function") {
+        c.clearCrosshairPosition();
+      }
+    } catch {}
+  };
+
   const dragStateRef = useRef<{
     id: string;
     handle: 'p1' | 'p2' | 'p3' | 'move' | number;
@@ -592,12 +615,16 @@ export const ChartCanvas: React.FC<Props> = ({
         const nextPts = [...orig.points];
         nextPts[drag.handle] = pt;
         onUpdateDrawing({ ...orig, points: nextPts, t1: nextPts[0].time, p1: nextPts[0].price, t2: nextPts[nextPts.length - 1].time, p2: nextPts[nextPts.length - 1].price });
+        syncCrosshairToPoint(helper.chart, helper.candleSeries, pt.time, pt.price);
       } else if (drag.handle === 'p1') {
         onUpdateDrawing({ ...orig, t1: pt.time, p1: pt.price });
+        syncCrosshairToPoint(helper.chart, helper.candleSeries, pt.time, pt.price);
       } else if (drag.handle === 'p2') {
         onUpdateDrawing({ ...orig, t2: pt.time, p2: pt.price });
+        syncCrosshairToPoint(helper.chart, helper.candleSeries, pt.time, pt.price);
       } else if (drag.handle === 'p3') {
         onUpdateDrawing({ ...orig, t2: pt.time, p3: pt.price });
+        syncCrosshairToPoint(helper.chart, helper.candleSeries, pt.time, pt.price);
       } else if (drag.handle === 'move') {
         const startT = helper.xToTime(drag.startX);
         const startP = helper.candleSeries.coordinateToPrice(drag.startY) ?? orig.p1;
@@ -617,6 +644,7 @@ export const ChartCanvas: React.FC<Props> = ({
   const handleMouseUp = () => {
     if (dragStateRef.current) {
       dragStateRef.current = null;
+      clearSyncedCrosshair(chartRef.current);
       chartRef.current?.applyOptions({ handleScroll: true, handleScale: true });
     }
   };
@@ -1080,6 +1108,7 @@ export const ChartCanvas: React.FC<Props> = ({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
       onDoubleClick={handleDoubleClick}
       className={`relative w-full h-full overflow-hidden ${(activeTool !== 'cursor' || replaySelecting) ? 'cursor-crosshair' : ''}`}
     >

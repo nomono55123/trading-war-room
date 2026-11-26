@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { MobileView } from './MobileView';
+import { TvToolIcon } from './TvToolIcons';
 import {
   Eye, EyeOff, Plus, Trash2, Code2, Play, Pause, Layers,
   PanelRightClose, PanelRightOpen, X, Flag,
-  MousePointer2, TrendingUp, Minus, Square, Percent, ArrowUpCircle, ArrowDownCircle,
-  Bookmark, Settings2, BarChartHorizontal, Waypoints, Lock, Unlock,
-  Type, Scissors, StepForward, Shuffle, ChevronDown, Star
+  Bookmark, Settings2, Lock, Unlock,
+  Scissors, StepForward, Shuffle, ChevronDown, Star
 } from 'lucide-react';
 import type { IChartApi, ISeriesApi } from 'lightweight-charts';
 import {
@@ -39,12 +40,167 @@ interface DrawingTemplate {
 }
 
 const DEFAULT_TEMPLATES: DrawingTemplate[] = [
-  { id: 'tpl_kuang', name: '框法', targetType: 'rect', color: '#2962ff', fillColor: 'rgba(41, 98, 255, 0.18)' },
-  { id: 'tpl_poi', name: 'POI', targetType: 'rect', color: '#9c27b0', fillColor: 'rgba(156, 39, 176, 0.20)' },
-  { id: 'tpl_sweep', name: 'Sweep', targetType: 'trendline', color: '#ff9800', dashed: true },
-  { id: 'tpl_fibo_std', name: 'fibo (預設)', targetType: 'fibo', color: '#787b86', fiboLevels: DEFAULT_FIBO_LEVELS },
-  { id: 'tpl_ote', name: 'OTE (0.618 - 0.79)', targetType: 'fibo', color: '#2962ff', fiboLevels: DEFAULT_FIBO_LEVELS.map((lv) => ({ ...lv, enabled: [0, 0.5, 0.618, 0.705, 0.79, 1].includes(lv.value) })) },
-  { id: 'tpl_frvp_200', name: 'FRVP (200行 / 70%)', targetType: 'frvp', color: '#00bcd4', frvpConfig: DEFAULT_FRVP_CONFIG },
+  {
+    "id": "tpl_1795609512936",
+    "name": "框法*",
+    "targetType": "fibo",
+    "color": "#2962ff",
+    "fillColor": "rgba(41, 98, 255, 0.18)",
+    "fiboLevels": [
+      { "enabled": false, "value": -0.29, "color": "#ef5350" },
+      { "enabled": false, "value": -0.21, "color": "#ff9800" },
+      { "enabled": true, "value": 0, "color": "#787b86" },
+      { "enabled": false, "value": 0.109, "color": "#787b86" },
+      { "enabled": false, "value": 0.127, "color": "#787b86" },
+      { "enabled": false, "value": 0.145, "color": "#787b86" },
+      { "enabled": false, "value": 0.214, "color": "#787b86" },
+      { "enabled": false, "value": 0.232, "color": "#787b86" },
+      { "enabled": false, "value": 0.25, "color": "#787b86" },
+      { "enabled": false, "value": 0.382, "color": "#4caf50" },
+      { "enabled": false, "value": 0.5, "color": "#4caf50" },
+      { "enabled": false, "value": 0.618, "color": "#089981" },
+      { "enabled": false, "value": 0.705, "color": "#2962ff" },
+      { "enabled": false, "value": 0.79, "color": "#2962ff" },
+      { "enabled": true, "value": 1, "color": "#787b86" },
+      { "enabled": false, "value": 1.272, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.414, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.54, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.618, "color": "#e91e63" },
+      { "enabled": true, "value": 3.8, "color": "#ff4242" },
+      { "enabled": true, "value": 11.8, "color": "#787b86" },
+      { "enabled": true, "value": 5.8, "color": "#24ff65" },
+      { "enabled": true, "value": 25.8, "color": "#787b86" },
+      { "enabled": true, "value": 18.8, "color": "#787b86" }
+    ]
+  },
+  {
+    "id": "tpl_1795609627565",
+    "name": "SWEEP*",
+    "targetType": "fibo",
+    "color": "#787b86",
+    "fiboLevels": [
+      { "enabled": true, "value": -0.29, "color": "#575757" },
+      { "enabled": true, "value": -0.21, "color": "#5a5958" },
+      { "enabled": true, "value": 0, "color": "#787b86" },
+      { "enabled": false, "value": 0.109, "color": "#787b86" },
+      { "enabled": false, "value": 0.127, "color": "#787b86" },
+      { "enabled": false, "value": 0.145, "color": "#787b86" },
+      { "enabled": false, "value": 0.214, "color": "#787b86" },
+      { "enabled": false, "value": 0.232, "color": "#787b86" },
+      { "enabled": false, "value": 0.25, "color": "#787b86" },
+      { "enabled": false, "value": 0.382, "color": "#4caf50" },
+      { "enabled": false, "value": 0.5, "color": "#4caf50" },
+      { "enabled": false, "value": 0.618, "color": "#089981" },
+      { "enabled": false, "value": 0.705, "color": "#2962ff" },
+      { "enabled": false, "value": 0.79, "color": "#2962ff" },
+      { "enabled": true, "value": 1, "color": "#787b86" },
+      { "enabled": false, "value": 1.272, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.414, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.54, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.618, "color": "#e91e63" },
+      { "enabled": false, "value": 3.8, "color": "#ff4242" },
+      { "enabled": false, "value": 11.8, "color": "#787b86" },
+      { "enabled": false, "value": 5.8, "color": "#24ff65" },
+      { "enabled": false, "value": 25.8, "color": "#787b86" },
+      { "enabled": false, "value": 18.8, "color": "#787b86" }
+    ]
+  },
+  {
+    "id": "tpl_1795609702685",
+    "name": "POI*",
+    "targetType": "fibo",
+    "color": "#787b86",
+    "fiboLevels": [
+      { "enabled": false, "value": -0.29, "color": "#575757" },
+      { "enabled": false, "value": -0.21, "color": "#5a5958" },
+      { "enabled": true, "value": 0, "color": "#787b86" },
+      { "enabled": true, "value": 0.109, "color": "#787b86" },
+      { "enabled": true, "value": 0.127, "color": "#787b86" },
+      { "enabled": true, "value": 0.145, "color": "#787b86" },
+      { "enabled": true, "value": 0.214, "color": "#787b86" },
+      { "enabled": true, "value": 0.232, "color": "#787b86" },
+      { "enabled": true, "value": 0.25, "color": "#787b86" },
+      { "enabled": false, "value": 0.382, "color": "#4caf50" },
+      { "enabled": false, "value": 0.5, "color": "#4caf50" },
+      { "enabled": false, "value": 0.618, "color": "#089981" },
+      { "enabled": false, "value": 0.705, "color": "#2962ff" },
+      { "enabled": false, "value": 0.79, "color": "#2962ff" },
+      { "enabled": true, "value": 1, "color": "#787b86" },
+      { "enabled": false, "value": 1.272, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.414, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.54, "color": "#9c27b0" },
+      { "enabled": false, "value": 1.618, "color": "#e91e63" },
+      { "enabled": false, "value": 3.8, "color": "#ff4242" },
+      { "enabled": false, "value": 11.8, "color": "#787b86" },
+      { "enabled": false, "value": 5.8, "color": "#24ff65" },
+      { "enabled": false, "value": 25.8, "color": "#787b86" },
+      { "enabled": false, "value": 18.8, "color": "#787b86" }
+    ]
+  },
+  {
+    "id": "tpl_1795609822481",
+    "name": "fibo*",
+    "targetType": "fibo",
+    "color": "#787b86",
+    "fiboLevels": [
+      { "enabled": false, "value": -0.29, "color": "#575757" },
+      { "enabled": false, "value": -0.21, "color": "#5a5958" },
+      { "enabled": true, "value": 0, "color": "#787b86" },
+      { "enabled": false, "value": 0.109, "color": "#787b86" },
+      { "enabled": false, "value": 0.127, "color": "#787b86" },
+      { "enabled": false, "value": 0.145, "color": "#787b86" },
+      { "enabled": false, "value": 0.214, "color": "#787b86" },
+      { "enabled": false, "value": 0.232, "color": "#787b86" },
+      { "enabled": false, "value": 0.25, "color": "#787b86" },
+      { "enabled": false, "value": 0.382, "color": "#4caf50" },
+      { "enabled": true, "value": 0.5, "color": "#4caf50" },
+      { "enabled": true, "value": 0.618, "color": "#089981" },
+      { "enabled": true, "value": 0.705, "color": "#2962ff" },
+      { "enabled": true, "value": 0.786, "color": "#2962ff" },
+      { "enabled": true, "value": 1, "color": "#787b86" },
+      { "enabled": false, "value": 1.272, "color": "#9c27b0" },
+      { "enabled": true, "value": 0.236, "color": "#4a4a4a" },
+      { "enabled": true, "value": 0.382, "color": "#4a4a4a" },
+      { "enabled": false, "value": 1.618, "color": "#e91e63" },
+      { "enabled": false, "value": 3.8, "color": "#ff4242" },
+      { "enabled": false, "value": 11.8, "color": "#787b86" },
+      { "enabled": false, "value": 5.8, "color": "#24ff65" },
+      { "enabled": false, "value": 25.8, "color": "#787b86" },
+      { "enabled": false, "value": 18.8, "color": "#787b86" }
+    ]
+  },
+  {
+    "id": "tpl_1795609835599",
+    "name": "OTE*",
+    "targetType": "fibo",
+    "color": "#787b86",
+    "fiboLevels": [
+      { "enabled": false, "value": -0.29, "color": "#575757" },
+      { "enabled": false, "value": -0.21, "color": "#5a5958" },
+      { "enabled": true, "value": 0, "color": "#787b86" },
+      { "enabled": false, "value": 0.109, "color": "#787b86" },
+      { "enabled": false, "value": 0.127, "color": "#787b86" },
+      { "enabled": false, "value": 0.145, "color": "#787b86" },
+      { "enabled": false, "value": 0.214, "color": "#787b86" },
+      { "enabled": false, "value": 0.232, "color": "#787b86" },
+      { "enabled": false, "value": 0.25, "color": "#787b86" },
+      { "enabled": false, "value": 0.382, "color": "#4caf50" },
+      { "enabled": true, "value": 0.5, "color": "#4caf50" },
+      { "enabled": true, "value": 0.618, "color": "#089981" },
+      { "enabled": true, "value": 0.705, "color": "#2962ff" },
+      { "enabled": true, "value": 0.786, "color": "#2962ff" },
+      { "enabled": true, "value": 1, "color": "#787b86" },
+      { "enabled": false, "value": 1.272, "color": "#9c27b0" },
+      { "enabled": false, "value": 0.236, "color": "#4a4a4a" },
+      { "enabled": false, "value": 0.382, "color": "#4a4a4a" },
+      { "enabled": false, "value": 1.618, "color": "#e91e63" },
+      { "enabled": false, "value": 3.8, "color": "#ff4242" },
+      { "enabled": false, "value": 11.8, "color": "#787b86" },
+      { "enabled": false, "value": 5.8, "color": "#24ff65" },
+      { "enabled": false, "value": 25.8, "color": "#787b86" },
+      { "enabled": false, "value": 18.8, "color": "#787b86" }
+    ]
+  }
 ];
 
 function loadInitialIndicators(): IndicatorScript[] {
@@ -86,7 +242,7 @@ export function App() {
   const [tplMenuOpen, setTplMenuOpen] = useState(false);
   const [templates, setTemplates] = useState<DrawingTemplate[]>(() => {
     try {
-      const saved = localStorage.getItem('warroom_templates_v1');
+      const saved = localStorage.getItem('warroom_templates_v2');
       if (saved) {
         const p = JSON.parse(saved);
         if (Array.isArray(p) && p.length > 0) return p;
@@ -110,6 +266,8 @@ export function App() {
     } catch { return { BTCUSDT: 'red', ETHUSDT: 'red' }; }
   });
   const [wlOpen, setWlOpen] = useState(true);
+  const [isMobileView, setIsMobileView] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  useEffect(() => { const onResize = () => setIsMobileView(window.innerWidth < 768); window.addEventListener('resize', onResize); return () => window.removeEventListener('resize', onResize); }, []);
 
   const [indicators, setIndicators] = useState<IndicatorScript[]>(loadInitialIndicators);
   const [activeEditId, setActiveEditId] = useState<string>(() => loadInitialIndicators()[0]?.id || '');
@@ -132,7 +290,7 @@ export function App() {
 
   useEffect(() => { localStorage.setItem('warroom_flags_v1', JSON.stringify(flagsMap)); }, [flagsMap]);
   useEffect(() => { localStorage.setItem('warroom_drawings_v1', JSON.stringify(drawings)); }, [drawings]);
-  useEffect(() => { localStorage.setItem('warroom_templates_v1', JSON.stringify(templates)); }, [templates]);
+  useEffect(() => { localStorage.setItem('warroom_templates_v2', JSON.stringify(templates)); }, [templates]);
   useEffect(() => { localStorage.setItem('warroom_poscfg_v1', JSON.stringify(defaultPosConfig)); }, [defaultPosConfig]);
 
   useEffect(() => {
@@ -380,6 +538,32 @@ export function App() {
     return '線段';
   };
 
+  if (isMobileView) {
+    return (
+      <MobileView
+        symbol={symbol} setSymbol={setSymbol} tf={tf} setTf={setTf} timeframes={TIMEFRAMES}
+        bars={visibleBars} outputs={indicatorOutputs}
+        indicators={indicators} setIndicators={setIndicators}
+        indSettingsId={indSettingsId} setIndSettingsId={setIndSettingsId}
+        activeTool={activeTool} setActiveTool={setActiveTool}
+        drawings={drawings} setDrawings={setDrawings}
+        selectedDrawingId={selectedDrawingId} setSelectedDrawingId={setSelectedDrawingId}
+        handleUpdateDrawing={handleUpdateDrawing}
+        settingsModalOpen={settingsModalOpen} setSettingsModalOpen={setSettingsModalOpen}
+        templates={templates} setTemplates={setTemplates}
+        handleSaveTemplate={handleSaveTemplate} handleApplyTemplate={handleApplyTemplate}
+        defaultFiboLevels={defaultFiboLevels} setDefaultFiboLevels={setDefaultFiboLevels}
+        defaultPosConfig={defaultPosConfig} setDefaultPosConfig={setDefaultPosConfig}
+        defaultFrvpConfig={defaultFrvpConfig} setDefaultFrvpConfig={setDefaultFrvpConfig}
+        loadMoreHistory={loadMoreHistory} loadAllHistory={loadAllHistory} loadingAllHistory={loadingAllHistory}
+        chartRef={chartRef} candleSeriesRef={candleSeriesRef}
+        allSymbols={allSymbols} tickersMap={tickersMap} flagsMap={flagsMap}
+        handleToggleRedFlag={handleToggleRedFlag} handleSetFlagColor={handleSetFlagColor}
+        refreshingPairs={refreshingPairs} fetchAllSymbols={fetchAllSymbols}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen w-screen bg-[#131722] text-[#d1d4dc] select-none overflow-hidden">
       <header className="flex items-center justify-between h-11 px-3 border-b border-[#2a2e39] bg-[#1e222d] gap-2 shrink-0">
@@ -509,29 +693,48 @@ export function App() {
       </header>
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        <aside className="w-11 bg-[#1e222d] border-r border-[#2a2e39] flex flex-col items-center py-2 gap-1.5 shrink-0 z-20">
+        <aside className="w-12 bg-[#1e222d] border-r border-[#2a2e39] flex flex-col items-center py-2 gap-1 shrink-0 z-20">
           {[
-            { id: 'cursor', icon: MousePointer2, label: '十字游標 (Esc)' },
-            { id: 'trendline', icon: TrendingUp, label: '趨勢線' },
-            { id: 'hline', icon: Minus, label: '水平線' },
-            { id: 'path', icon: Waypoints, label: '路徑 Path (連續點擊畫折線，雙擊或右鍵完成)' },
-            { id: 'rect', icon: Square, label: '矩形框 / POI' },
-            { id: 'text', icon: Type, label: '文字標註 (Text / 筆記標籤)' },
-            { id: 'fibo', icon: Percent, label: '斐波那契回撤' },
-            { id: 'frvp', icon: BarChartHorizontal, label: '固定範圍成交量分佈圖 (FRVP)' },
-            { id: 'long', icon: ArrowUpCircle, label: '多頭倉位 (算顆數)' },
-            { id: 'short', icon: ArrowDownCircle, label: '空頭倉位 (算顆數)' },
-          ].map((tool) => {
-            const Icon = tool.icon;
-            return (
-              <button key={tool.id} onClick={() => setActiveTool(tool.id as DrawingToolType)} className={`p-2 rounded cursor-pointer ${activeTool === tool.id ? 'bg-[#2962ff] text-white' : 'text-[#787b86] hover:bg-[#2a2e39] hover:text-white'}`} title={tool.label}>
-                <Icon size={17} />
+            { id: 'cursor', label: '十字游標 (Esc)' },
+            { id: 'trendline', label: '趨勢線' },
+            { id: 'hline', label: '水平線' },
+            { id: 'path', label: '路徑' },
+            { id: 'rect', label: '矩形框' },
+            { id: 'text', label: '文字標註' },
+            { id: 'fibo', label: '斐波那契回撤' },
+            { id: 'frvp', label: '固定範圍成交量分佈圖' },
+            { id: 'long', label: '多頭倉位' },
+            { id: 'short', label: '空頭倉位' },
+          ].map((tool) => (
+            <div key={tool.id} className="relative group flex items-center justify-center">
+              <button
+                onClick={() => setActiveTool(tool.id as DrawingToolType)}
+                className={`w-9 h-9 flex items-center justify-center rounded-md transition cursor-pointer ${
+                  activeTool === tool.id
+                    ? 'bg-[#2962ff] text-white shadow'
+                    : 'text-[#b2b5be] hover:bg-[#2a2e39] hover:text-white'
+                }`}
+              >
+                <TvToolIcon type={tool.id as DrawingToolType} size={22} />
               </button>
-            );
-          })}
-          <button onClick={() => { if (confirm(`清除 ${symbol}.P 所有未鎖定的繪圖？`)) { setDrawings(drawings.filter((d) => d.symbol !== symbol || d.locked)); setSelectedDrawingId(null); } }} className="p-2 rounded text-[#787b86] hover:bg-[#2a2e39] hover:text-[#ef5350] cursor-pointer mt-auto" title="清除未鎖定繪圖">
-            <Trash2 size={17} />
-          </button>
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-full ml-2.5 px-2.5 py-1.5 rounded bg-[#2a2e39] border border-[#363a45] text-white text-xs font-medium whitespace-nowrap shadow-xl z-50">
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-[#2a2e39]" />
+                {tool.label}
+              </div>
+            </div>
+          ))}
+          <div className="relative group flex items-center justify-center mt-auto">
+            <button
+              onClick={() => { if (confirm(`清除 ${symbol}.P 所有未鎖定的繪圖？`)) { setDrawings(drawings.filter((d) => d.symbol !== symbol || d.locked)); setSelectedDrawingId(null); } }}
+              className="w-9 h-9 flex items-center justify-center rounded-md text-[#b2b5be] hover:bg-[#2a2e39] hover:text-[#ef5350] transition cursor-pointer"
+            >
+              <Trash2 size={18} />
+            </button>
+            <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-full ml-2.5 px-2.5 py-1.5 rounded bg-[#2a2e39] border border-[#363a45] text-white text-xs font-medium whitespace-nowrap shadow-xl z-50">
+              <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-[#2a2e39]" />
+              清除未鎖定繪圖
+            </div>
+          </div>
         </aside>
 
         <div className="flex flex-col flex-1 min-w-0 min-h-0">
@@ -629,6 +832,7 @@ export function App() {
                   {tplMenuOpen && (
                     <div className="absolute left-0 mt-1 w-44 bg-[#1e222d] border border-[#363a45] rounded shadow-xl py-1 z-50">
                       <button onClick={handleSaveTemplate} className="w-full text-left px-3 py-1.5 text-xs text-[#2962ff] hover:bg-[#2a2e39] font-semibold cursor-pointer">儲存繪圖範本為...</button>
+                      <button onClick={() => { navigator.clipboard?.writeText(JSON.stringify(templates)); alert("已複製全部範本代碼！請用 LINE/Telegram 傳到手機，點手機版「範本 -> 貼上代碼匯入」即可同步。"); setTplMenuOpen(false); }} className="w-full text-left px-3 py-1.5 text-xs text-[#26a69a] hover:bg-[#2a2e39] font-semibold cursor-pointer">複製全部範本給手機</button>
                       <div className="border-t border-[#2a2e39] my-1" />
                       {templates.map((tpl) => (
                         <div key={tpl.id} className="flex items-center justify-between px-3 py-1.5 text-xs hover:bg-[#2a2e39] cursor-pointer">
