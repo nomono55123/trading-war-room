@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { createChart, CandlestickSeries, LineSeries, type IChartApi, type ISeriesApi } from 'lightweight-charts';
 import type { Bar, IndicatorOutput } from './indicatorEngine';
 
@@ -182,7 +182,7 @@ export const ChartCanvas: React.FC<Props> = ({
       layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
       grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
       crosshair: { mode: 0 },
-      timeScale: { borderColor: '#2a2e39', timeVisible: true, rightOffset: 25 },
+      timeScale: { borderColor: '#2a2e39', timeVisible: true, rightOffset: 45 },
       rightPriceScale: { borderColor: '#2a2e39', autoScale: true },
     });
 
@@ -206,7 +206,6 @@ export const ChartCanvas: React.FC<Props> = ({
   }, []);
 
   const prevRenderedBarsRef = useRef<typeof bars>([]);
-  const isUserDraggingRef = useRef<boolean>(false);
   const drawOverlayFnRef = useRef<(() => void) | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const onLoadMoreRef = useRef(onLoadMoreHistory);
@@ -228,10 +227,6 @@ export const ChartCanvas: React.FC<Props> = ({
     const handleRangeChange = (logicalRange: { from: number; to: number } | null) => {
       scheduleDraw();
       if (!logicalRange) return;
-      if (logicalRange.from < -5 && !isUserDraggingRef.current) {
-        const span = Math.max(10, logicalRange.to - logicalRange.from);
-        chart.timeScale().setVisibleLogicalRange({ from: -5, to: -5 + span });
-      }
       if (logicalRange.from < 300 && onLoadMoreRef.current) {
         onLoadMoreRef.current();
       }
@@ -280,6 +275,13 @@ export const ChartCanvas: React.FC<Props> = ({
     candleSeriesRef.current.setData(bars as any);
     prevRenderedBarsRef.current = bars;
     lastSymbolRef.current = symbol;
+    const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
+    const dynamicOffset = bars.length < 40
+      ? Math.max(20, Math.round((isNarrow ? 28 : 45) - bars.length * 0.25))
+      : bars.length < 100
+        ? (isNarrow ? 24 : 36)
+        : (isNarrow ? 18 : 25);
+    chartRef.current.timeScale().applyOptions({ rightOffset: dynamicOffset });
     chartRef.current.priceScale("right").applyOptions({ autoScale: true });
     chartRef.current.timeScale().scrollToRealTime();
   }, [bars, symbol]);

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import {
-  ChevronDown, Pencil, Layers, List, CandlestickChart, X,
+  ChevronDown, ChevronLeft, ChevronRight, Pencil, Layers, List, CandlestickChart, X,
   Eye, EyeOff, Settings2, Trash2, Lock, Unlock, Download, Bookmark,
-  Search, Star,
+  Search, Star, Flag,
 } from 'lucide-react';
 import {
   ChartCanvas,
@@ -11,7 +11,7 @@ import {
 } from './ChartCanvas';
 import { MobileChartOverlay } from './MobileChartOverlay';
 import { TvToolIcon } from './TvToolIcons';
-import { WatchlistPanel } from './WatchlistPanel';
+import { WatchlistPanel, FLAG_DEFS, type WatchlistListContext } from './WatchlistPanel';
 import { IndicatorSettingsModal } from './IndicatorSettingsModal';
 import { DrawingSettingsModal } from './DrawingSettingsModal';
 import { PriceAxisCountdownTag } from './CandleCountdownBadge';
@@ -98,15 +98,17 @@ export const MobileView: React.FC<any> = ({
   const [tab, setTab] = useState<'chart' | 'watchlist'>('chart');
   const [tfSheetOpen, setTfSheetOpen] = useState(false);
 
-  // 鉛筆：切換顯示/隱藏「常用繪圖」（只顯示有星號的工具）
-  const [favBarOpen, setFavBarOpen] = useState(false);
+  const [listCtx, setListCtx] = useState<WatchlistListContext>({
+    activeWlId: localStorage.getItem('warroom_active_wl_v1') || 'wl_main',
+    sortByChange: (localStorage.getItem('warroom_sort_change_v1') as 'none' | 'desc' | 'asc') || 'none',
+    symbols: [],
+  });
+  const [wlSyncTick, setWlSyncTick] = useState(0);
 
-  // 藍色塗層 ICON：開啟「繪圖工具箱」（搜尋 + 分類 + 點亮/取消星號）
+  const [favBarOpen, setFavBarOpen] = useState(false);
   const [toolboxOpen, setToolboxOpen] = useState(false);
   const [toolSearch, setToolSearch] = useState('');
   const [toolCategory, setToolCategory] = useState<'全部' | '線段與路徑' | '區域與預測'>('全部');
-
-  // 指標面板開關（獨立於繪圖工具）
   const [indPanelOpen, setIndPanelOpen] = useState(false);
   const [tplOpen, setTplOpen] = useState(false);
 
@@ -164,10 +166,51 @@ export const MobileView: React.FC<any> = ({
     return () => clearTimeout(t);
   }, [symbol, tf.label]);
 
+  const mainWatchlistHasSymbol = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('warroom_watchlists_v1');
+      const lists = raw ? JSON.parse(raw) : [];
+      const main = lists.find((w: any) => w.id === 'wl_main') || lists[0];
+      return Array.isArray(main?.symbols) && main.symbols.includes(symbol);
+    } catch {
+      return false;
+    }
+  }, [symbol, tab, wlSyncTick]);
+
+  const handleQuickToggleWatchlist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const raw = localStorage.getItem('warroom_watchlists_v1');
+      const lists = raw
+        ? JSON.parse(raw)
+        : [{ id: 'wl_main', name: '主力觀察 (Main)', symbols: [] }];
+      const targetId = lists.find((w: any) => w.id === 'wl_main')?.id || lists[0]?.id || 'wl_main';
+      const nextLists = lists.map((w: any) => {
+        if (w.id !== targetId) return w;
+        const exists = Array.isArray(w.symbols) && w.symbols.includes(symbol);
+        return {
+          ...w,
+          symbols: exists ? w.symbols.filter((x: string) => x !== symbol) : [...(w.symbols || []), symbol],
+        };
+      });
+      localStorage.setItem('warroom_watchlists_v1', JSON.stringify(nextLists));
+      setWlSyncTick((n) => n + 1);
+    } catch {}
+  };
+
+  const handleStepSymbol = (delta: -1 | 1) => {
+    const pool = listCtx.symbols.length > 0 ? listCtx.symbols : (allSymbols || []);
+    if (!pool.length) return;
+    const idx = pool.indexOf(symbol);
+    const nextIdx = idx === -1 ? 0 : (idx + delta + pool.length) % pool.length;
+    setSymbol(pool[nextIdx]);
+  };
+
   const curTicker = tickersMap?.[symbol];
   const pct = curTicker ? Number(curTicker.priceChangePercent ?? 0) : 0;
   const lastPrice = curTicker?.lastPrice ?? '';
   const lastBar = bars && bars.length > 0 ? bars[bars.length - 1] : undefined;
+  const flagHex = FLAG_DEFS.find((f) => f.id === flagsMap?.[symbol])?.hex;
 
   const targetInd = indSettingsId
     ? indicators.find((i: IndicatorScript) => i.id === indSettingsId)
@@ -227,20 +270,63 @@ export const MobileView: React.FC<any> = ({
           tf={tf}
         />
 
-        {/* 左上角商品資訊 + 指標按鈕 + 畫線提示/編輯列 */}
+        {/* 左上角商品資訊 + 固定位置快捷列 + 指標按鈕 */}
         <div className="absolute top-3 left-3 z-30 flex flex-col items-start gap-2 pointer-events-none">
-          <div className="bg-[#131722]/75 backdrop-blur-sm px-2 py-1 rounded-lg">
-            <div className="text-sm font-bold text-white leading-tight">{symbol}</div>
-            {lastPrice !== '' && (
-              <div
-                className={`text-xs font-mono font-semibold leading-tight mt-0.5 ${
-                  pct >= 0 ? 'text-[#26a69a]' : 'text-[#ef5350]'
-                }`}
+          <div className="pointer-events-auto flex items-center gap-2 bg-[#131722]/90 backdrop-blur-md border border-[#363a45] px-3 py-2 rounded-2xl shadow-xl">
+            <div style={{ width: '124px', minWidth: '124px', maxWidth: '124px' }} className="shrink-0 overflow-hidden">
+              <div className="text-sm font-bold text-white leading-tight truncate">{symbol}</div>
+              {lastPrice !== '' && (
+                <div
+                  className={`text-xs font-mono font-semibold leading-tight mt-0.5 truncate ${
+                    pct >= 0 ? 'text-[#26a69a]' : 'text-[#ef5350]'
+                  }`}
+                >
+                  {lastPrice} ({pct >= 0 ? '+' : ''}
+                  {pct.toFixed(2)}%)
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 pl-2 border-l border-[#363a45] shrink-0">
+              <button
+                onClick={() => handleStepSymbol(-1)}
+                className="p-2.5 rounded-xl bg-[#1e222d] border border-[#363a45] text-white active:bg-[#2a2e39]"
+                title="上一檔"
               >
-                {lastPrice} ({pct >= 0 ? '+' : ''}
-                {pct.toFixed(2)}%)
-              </div>
-            )}
+                <ChevronLeft size={17} />
+              </button>
+              <button
+                onClick={() => handleStepSymbol(1)}
+                className="p-2.5 rounded-xl bg-[#1e222d] border border-[#363a45] text-white active:bg-[#2a2e39]"
+                title="下一檔"
+              >
+                <ChevronRight size={17} />
+              </button>
+              <button
+                onClick={handleQuickToggleWatchlist}
+                className={`p-2.5 rounded-xl border ${
+                  mainWatchlistHasSymbol
+                    ? 'bg-[#2962ff]/20 border-[#2962ff] text-[#facc15]'
+                    : 'bg-[#1e222d] border-[#363a45] text-[#9598a1]'
+                }`}
+                title={mainWatchlistHasSymbol ? '已在主力觀察' : '加入主力觀察'}
+              >
+                <Star size={17} className={mainWatchlistHasSymbol ? 'fill-[#facc15]' : ''} />
+              </button>
+              <button
+                onClick={(e) => handleToggleRedFlag?.(e, symbol)}
+                className="p-2.5 rounded-xl bg-[#1e222d] border border-[#363a45]"
+                title="切換旗幟"
+              >
+                <Flag
+                  size={17}
+                  style={{
+                    color: flagHex || '#9598a1',
+                    fill: flagHex || 'transparent',
+                  }}
+                />
+              </button>
+            </div>
           </div>
 
           <div className="pointer-events-auto">
@@ -433,7 +519,7 @@ export const MobileView: React.FC<any> = ({
           )}
         </div>
 
-        {/* 鉛筆按鈕叫出的「常用繪圖」浮動列：只顯示有加星號的工具 */}
+        {/* 鉛筆按鈕叫出的「常用繪圖」浮動列 */}
         {favBarOpen && (
           <div className="absolute left-3 bottom-20 z-30 flex flex-col items-center gap-1.5 bg-[#1e222d]/95 backdrop-blur-md border border-[#363a45] rounded-2xl p-2 shadow-2xl">
             {favoriteTools.length > 0 ? (
@@ -493,12 +579,19 @@ export const MobileView: React.FC<any> = ({
           </div>
         )}
 
-        {/* 底部雙膠囊控制列：左邊鉛筆叫出「常用繪圖」，右邊藍色塗層打開「繪圖工具箱」 */}
+        {/* 底部控制列：左側固定四欄 Grid（寬高與位置完全鎖死） + 右側繪圖雙鈕 */}
         <div
-          className="absolute inset-x-3 z-30 flex items-center justify-between pointer-events-none"
+          className="absolute inset-x-3 z-30 flex items-center justify-between gap-2.5 pointer-events-none"
           style={{ bottom: 'max(16px, env(safe-area-inset-bottom))' }}
         >
-          <div className="pointer-events-auto flex items-center bg-[#1e222d]/95 backdrop-blur-md border border-[#363a45] rounded-full shadow-2xl overflow-hidden">
+          <div
+            style={{
+              height: '54px',
+              display: 'grid',
+              gridTemplateColumns: '32% 20% 20% 28%',
+            }}
+            className="pointer-events-auto flex-1 min-w-0 bg-[#1e222d]/95 backdrop-blur-md border border-[#363a45] rounded-2xl shadow-2xl overflow-hidden"
+          >
             <button
               onClick={() => {
                 setTab('watchlist');
@@ -507,9 +600,25 @@ export const MobileView: React.FC<any> = ({
                 setTfSheetOpen(false);
                 setIndPanelOpen(false);
               }}
-              className="px-4 py-2.5 text-[13.5px] font-bold text-white border-r border-[#363a45] active:bg-[#2a2e39]"
+              className="w-full h-full min-w-0 px-2 text-base font-bold text-white flex items-center justify-center border-r border-[#363a45] active:bg-[#2a2e39]"
             >
-              {symbol.replace('USDT.P', '').replace('USDT', '')}
+              <span className="truncate block w-full text-center">
+                {symbol.replace('USDT.P', '').replace('USDT', '')}
+              </span>
+            </button>
+            <button
+              onClick={() => handleStepSymbol(-1)}
+              className="w-full h-full flex items-center justify-center text-white border-r border-[#363a45] active:bg-[#2a2e39]"
+              title="上一檔"
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <button
+              onClick={() => handleStepSymbol(1)}
+              className="w-full h-full flex items-center justify-center text-white border-r border-[#363a45] active:bg-[#2a2e39]"
+              title="下一檔"
+            >
+              <ChevronRight size={22} />
             </button>
             <button
               onClick={() => {
@@ -518,14 +627,14 @@ export const MobileView: React.FC<any> = ({
                 setToolboxOpen(false);
                 setIndPanelOpen(false);
               }}
-              className="px-3.5 py-2.5 text-[13.5px] font-semibold text-[#d1d4dc] flex items-center gap-1 active:bg-[#2a2e39]"
+              className="w-full h-full min-w-0 px-1.5 text-[15px] font-semibold text-[#d1d4dc] flex items-center justify-center gap-1 active:bg-[#2a2e39]"
             >
-              <span>{tf.label}</span>
-              <ChevronDown size={15} className="text-[#9598a1]" />
+              <span className="truncate">{tf.label}</span>
+              <ChevronDown size={16} className="shrink-0 text-[#9598a1]" />
             </button>
           </div>
 
-          <div className="pointer-events-auto flex items-center bg-[#1e222d]/95 backdrop-blur-md border border-[#363a45] rounded-full shadow-2xl px-1.5 py-1 gap-1">
+          <div className="pointer-events-auto shrink-0 flex items-center bg-[#1e222d]/95 backdrop-blur-md border border-[#363a45] rounded-full shadow-2xl px-1.5 py-1 gap-1">
             <button
               onClick={() => {
                 setFavBarOpen((v) => !v);
@@ -556,7 +665,7 @@ export const MobileView: React.FC<any> = ({
         </div>
       </div>
 
-      {/* 繪圖工具箱彈窗（藍色塗層 ICON 觸發） */}
+      {/* 繪圖工具箱彈窗 */}
       {toolboxOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/65 flex items-end"
@@ -579,7 +688,6 @@ export const MobileView: React.FC<any> = ({
               </button>
             </div>
 
-            {/* 搜尋框 */}
             <div className="relative flex items-center">
               <Search size={16} className="absolute left-3.5 text-[#787b86]" />
               <input
@@ -599,7 +707,6 @@ export const MobileView: React.FC<any> = ({
               )}
             </div>
 
-            {/* 分類篩選 */}
             <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
               {(['全部', '線段與路徑', '區域與預測'] as const).map((cat) => {
                 const active = toolCategory === cat;
@@ -619,7 +726,6 @@ export const MobileView: React.FC<any> = ({
               })}
             </div>
 
-            {/* 工具卡片列表（右上角星號切換，亮星號才會出現在鉛筆「常用繪圖」外列） */}
             <div className="grid grid-cols-3 gap-2.5 overflow-y-auto pr-0.5 py-0.5">
               {filteredToolboxTools.map((tool) => {
                 const isStarred = starredTools.includes(tool.id);
@@ -681,6 +787,7 @@ export const MobileView: React.FC<any> = ({
               onSetFlagColor={handleSetFlagColor}
               refreshingPairs={refreshingPairs}
               onRefreshPairs={fetchAllSymbols}
+              onListContextChange={setListCtx}
             />
           </div>
 
@@ -714,7 +821,9 @@ export const MobileView: React.FC<any> = ({
                 className="flex flex-col items-center justify-center py-1 text-white font-semibold text-xs"
               >
                 <List size={18} className="mb-0.5 text-[#2962ff]" />
-                觀察清單
+                {listCtx.activeWlId === 'wl_all' && listCtx.sortByChange === 'desc'
+                  ? '觀察清單（漲幅榜已記住）'
+                  : '觀察清單'}
               </button>
               <button
                 onClick={() => setTab('chart')}

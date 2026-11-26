@@ -31,6 +31,12 @@ function formatPrice(p: number | undefined): string {
   return p.toFixed(6);
 }
 
+export interface WatchlistListContext {
+  activeWlId: string;
+  sortByChange: 'none' | 'desc' | 'asc';
+  symbols: string[];
+}
+
 interface Props {
   symbol: string;
   onSelectSymbol: (sym: string) => void;
@@ -41,11 +47,13 @@ interface Props {
   onSetFlagColor: (sym: string, color: FlagColor | null) => void;
   refreshingPairs: boolean;
   onRefreshPairs: () => void;
+  onListContextChange?: (ctx: WatchlistListContext) => void;
 }
 
 export const WatchlistPanel: React.FC<Props> = React.memo(({
   symbol, onSelectSymbol, allSymbols, tickersMap, flagsMap,
-  onToggleRedFlag, onSetFlagColor, refreshingPairs, onRefreshPairs
+  onToggleRedFlag, onSetFlagColor, refreshingPairs, onRefreshPairs,
+  onListContextChange,
 }) => {
   const [watchlists, setWatchlists] = useState<WatchlistGroup[]>(() => {
     try {
@@ -67,12 +75,16 @@ export const WatchlistPanel: React.FC<Props> = React.memo(({
   const [wlFilter, setWlFilter] = useState<string>('');
   const [addModalOpen, setAddModalOpen] = useState<boolean>(false);
   const [addSearch, setAddSearch] = useState<string>('');
-  const [sortByChange, setSortByChange] = useState<'none' | 'desc' | 'asc'>('none');
+  const [sortByChange, setSortByChange] = useState<'none' | 'desc' | 'asc'>(() => {
+    const saved = localStorage.getItem('warroom_sort_change_v1');
+    return saved === 'desc' || saved === 'asc' || saved === 'none' ? saved : 'none';
+  });
   const [flagPickerSym, setFlagPickerSym] = useState<string | null>(null);
   const isResizingRef = useRef(false);
 
   useEffect(() => { localStorage.setItem('warroom_watchlists_v1', JSON.stringify(watchlists)); }, [watchlists]);
   useEffect(() => { localStorage.setItem('warroom_active_wl_v1', activeWlId); }, [activeWlId]);
+  useEffect(() => { localStorage.setItem('warroom_sort_change_v1', sortByChange); }, [sortByChange]);
 
   useEffect(() => {
     const close = () => setFlagPickerSym(null);
@@ -125,6 +137,10 @@ export const WatchlistPanel: React.FC<Props> = React.memo(({
     }
     return list;
   }, [isFlagList, activeFlagColor, flagsMap, activeWlId, allSymbols, currentWatchlist, wlFilter, sortByChange, tickersMap]);
+
+  useEffect(() => {
+    onListContextChange?.({ activeWlId, sortByChange, symbols: displayedSymbols });
+  }, [activeWlId, sortByChange, displayedSymbols, onListContextChange]);
 
   const handleCreateList = () => {
     const name = prompt('請輸入新觀察清單名稱：');
