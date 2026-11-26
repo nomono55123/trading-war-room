@@ -103,6 +103,8 @@ export function useMarketData(symbol: string, tf: TimeframeOption, replayCutoffT
   const emptyStreakRef = useRef(0);
   const cancelAllHistoryRef = useRef(false);
   const pool3dCacheRef = useRef<Record<string, Bar[]>>({});
+  const klineCacheRef = useRef<Record<string, Bar[]>>({});
+  const mtfCacheBySymRef = useRef<Record<string, Record<string, Bar[]>>>({});
 
   const fetchAllSymbols = async () => {
     setRefreshingPairs(true);
@@ -354,14 +356,39 @@ export function useMarketData(symbol: string, tf: TimeframeOption, replayCutoffT
     let cancelled = false;
     cancelAllHistoryRef.current = true;
     setLoadingAllHistory(false);
+    const prevSymbol = loadedContextRef.current.split('_')[0];
     loadedContextRef.current = contextKey;
-    setBars([]);
-    setBarsHTF([]);
-    setMtfBarsMap({});
-    rawBarsRef.current = [];
     isFetchingMoreRef.current = false;
     emptyStreakRef.current = 0;
-    setLoadingBars(true);
+
+    const cacheKey = `${symbol}_${tf.apiInterval}`;
+    const cachedRaw = anchor === null ? klineCacheRef.current[cacheKey] : undefined;
+    const cachedMtf = anchor === null ? mtfCacheBySymRef.current[symbol] : undefined;
+
+    // 1. 記憶體快取命中：0ms 秒開主圖與指標
+    if (cachedRaw && cachedRaw.length > 0) {
+      rawBarsRef.current = cachedRaw;
+      setBars(aggregateBarsByPeriod(cachedRaw, tf.sec, tf.aggregateCount));
+      setLoadingBars(false);
+    } else {
+      setBars([]);
+      setBarsHTF([]);
+      rawBarsRef.current = [];
+      setLoadingBars(true);
+    }
+
+    if (cachedMtf && Object.keys(cachedMtf).length > 0) {
+      setMtfBarsMap(cachedMtf);
+    } else if (prevSymbol !== symbol) {
+      setMtfBarsMap({});
+    }
+
+    const mergeBars = (a: Bar[], b: Bar[]): Bar[] => {
+      const map = new Map<number, Bar>();
+      for (const bar of a) map.set(bar.time, bar);
+      for (const bar of b) map.set(bar.time, bar);
+      return makeBarsContinuous(Array.from(map.values()).sort((x, y) => x.time - y.time));
+    };
 
     const fetchDeep = async (sym: string, interval: string, batches: number, initialEndMs?: number): Promise<Bar[]> => {
       let combined: Bar[] = [];
@@ -372,9 +399,7 @@ export function useMarketData(symbol: string, tf: TimeframeOption, replayCutoffT
         combined = [...chunk, ...combined];
         endMs = chunk[0].time * 1000 - 1000;
       }
-      const map = new Map<number, Bar>();
-      for (const bar of combined) map.set(bar.time, bar);
-      return makeBarsContinuous(Array.from(map.values()).sort((a, b) => a.time - b.time));
+      return mergeBars(combined, []);
     };
 
     (async () => {
@@ -383,32 +408,82 @@ export function useMarketData(symbol: string, tf: TimeframeOption, replayCutoffT
         const anchorEndMs = anchor !== null
           ? Math.min(nowMs, (anchor + tf.sec * 80) * 1000)
           : undefined;
-        const curBatches = tf.aggregateCount
+        const targetCurBatches = tf.aggregateCount
           ? Math.min(16, Math.max(6, Math.ceil(tf.aggregateCount * 1.5)))
           : 6;
 
-        const [rawCur, rawHtf, m15, h1, h4, d1, w1] = await Promise.all([
-          fetchDeep(symbol, tf.apiInterval, curBatches, anchorEndMs),
-          fetchDeep(symbol, tf.htfInterval, 1, anchorEndMs),
-          fetchDeep(symbol, '15m', 3, anchorEndMs),
-          fetchDeep(symbol, '1h', 3, anchorEndMs),
-          fetchDeep(symbol, '4h', 3, anchorEndMs),
-          fetchDeep(symbol, '1d', 2, anchorEndMs),
-          fetchDeep(symbol, '1w', 2, anchorEndMs),
+        // 2. 首屏極速出圖：主圖與各跨週期先各抓最新 1 批（500 根），第一時間渲染
+        const [fastCur, fastHtf, m15_1, h1_1, h4_1, d1_1, w1_1] = await Promise.all([
+          fetchBatch(symbol, tf.apiInterval, anchorEndMs),
+          fetchBatch(symbol, tf.htfInterval, anchorEndMs),
+          fetchBatch(symbol, '15m', anchorEndMs),
+          fetchBatch(symbol, '1h', anchorEndMs),
+          fetchBatch(symbol, '4h', anchorEndMs),
+          fetchBatch(symbol, '1d', anchorEndMs),
+          fetchBatch(symbol, '1w', anchorEndMs),
         ]);
-        if (!cancelled && activeSymbolRef.current === symbol && activeTfRef.current.label === tf.label) {
-          rawBarsRef.current = rawCur;
-          const finalCur = aggregateBarsByPeriod(rawCur, tf.sec, tf.aggregateCount);
-          if (finalCur.length > 0) setBars(finalCur);
-          if (rawHtf.length > 0) setBarsHTF(rawHtf);
-          setMtfBarsMap({
-            '15m': m15,
-            '1h': h1,
-            '4h': h4,
-            '1d': d1,
-            '1w': w1,
-          });
+
+        if (cancelled || activeSymbolRef.current !== symbol || activeTfRef.current.label !== tf.label) return;
+
+        const mergedFastCur = mergeBars(klineCacheRef.current[cacheKey] || [], fastCur);
+        if (anchor === null && mergedFastCur.length > 0) klineCacheRef.current[cacheKey] = mergedFastCur;
+        rawBarsRef.current = mergedFastCur;
+        if (mergedFastCur.length > 0) setBars(aggregateBarsByPeriod(mergedFastCur, tf.sec, tf.aggregateCount));
+        if (fastHtf.length > 0) setBarsHTF(makeBarsContinuous(fastHtf));
+
+        const prevMtf = mtfCacheBySymRef.current[symbol] || {};
+        const fastMtfMap: Record<string, Bar[]> = {
+          '15m': mergeBars(prevMtf['15m'] || [], m15_1),
+          '1h':  mergeBars(prevMtf['1h']  || [], h1_1),
+          '4h':  mergeBars(prevMtf['4h']  || [], h4_1),
+          '1d':  mergeBars(prevMtf['1d']  || [], d1_1),
+          '1w':  mergeBars(prevMtf['1w']  || [], w1_1),
+        };
+        if (anchor === null) mtfCacheBySymRef.current[symbol] = fastMtfMap;
+        setMtfBarsMap(fastMtfMap);
+        setLoadingBars(false);
+
+        // 3. 背景靜默補齊剩餘歷史批次（不阻塞畫面操作）
+        const curOldestMs = mergedFastCur.length > 0 ? mergedFastCur[0].time * 1000 - 1000 : anchorEndMs;
+        const m15OldestMs = fastMtfMap['15m'].length > 0 ? fastMtfMap['15m'][0].time * 1000 - 1000 : anchorEndMs;
+        const h1OldestMs  = fastMtfMap['1h'].length > 0  ? fastMtfMap['1h'][0].time * 1000 - 1000  : anchorEndMs;
+        const h4OldestMs  = fastMtfMap['4h'].length > 0  ? fastMtfMap['4h'][0].time * 1000 - 1000  : anchorEndMs;
+        const d1OldestMs  = fastMtfMap['1d'].length > 0  ? fastMtfMap['1d'][0].time * 1000 - 1000  : anchorEndMs;
+
+        const [deepCur, deepM15, deepH1, deepH4, deepD1] = await Promise.all([
+          targetCurBatches > 1 && mergedFastCur.length < targetCurBatches * 450
+            ? fetchDeep(symbol, tf.apiInterval, targetCurBatches - 1, curOldestMs)
+            : Promise.resolve([]),
+          fastMtfMap['15m'].length < 1200 ? fetchDeep(symbol, '15m', 2, m15OldestMs) : Promise.resolve([]),
+          fastMtfMap['1h'].length < 1200  ? fetchDeep(symbol, '1h', 2, h1OldestMs)   : Promise.resolve([]),
+          fastMtfMap['4h'].length < 1200  ? fetchDeep(symbol, '4h', 2, h4OldestMs)   : Promise.resolve([]),
+          fastMtfMap['1d'].length < 800   ? fetchDeep(symbol, '1d', 1, d1OldestMs)   : Promise.resolve([]),
+        ]);
+
+        if (cancelled || activeSymbolRef.current !== symbol || activeTfRef.current.label !== tf.label) return;
+
+        if (deepCur.length > 0) {
+          const fullCur = mergeBars(deepCur, rawBarsRef.current);
+          if (anchor === null) klineCacheRef.current[cacheKey] = fullCur;
+          rawBarsRef.current = fullCur;
+          setBars(aggregateBarsByPeriod(fullCur, tf.sec, tf.aggregateCount));
         }
+
+        const fullMtfMap: Record<string, Bar[]> = {
+          '15m': mergeBars(deepM15, fastMtfMap['15m']),
+          '1h':  mergeBars(deepH1,  fastMtfMap['1h']),
+          '4h':  mergeBars(deepH4,  fastMtfMap['4h']),
+          '1d':  mergeBars(deepD1,  fastMtfMap['1d']),
+          '1w':  fastMtfMap['1w'],
+        };
+        if (anchor === null) {
+          mtfCacheBySymRef.current[symbol] = fullMtfMap;
+          for (const [iv, list] of Object.entries(fullMtfMap)) {
+            const k = `${symbol}_${iv}`;
+            klineCacheRef.current[k] = mergeBars(klineCacheRef.current[k] || [], list);
+          }
+        }
+        setMtfBarsMap(fullMtfMap);
       } catch {} finally {
         if (!cancelled) setLoadingBars(false);
       }
