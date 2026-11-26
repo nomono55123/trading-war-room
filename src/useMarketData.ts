@@ -1,11 +1,15 @@
 ﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Bar } from './indicatorEngine';
 
+export type TimeframeGroup = '分鐘' | '小時' | '日週月';
+
 export interface TimeframeOption {
   label: string;
   apiInterval: string;
   htfInterval: string;
   sec: number;
+  group: TimeframeGroup;
+  pinned?: boolean;
   aggregateCount?: number;
 }
 
@@ -16,18 +20,23 @@ export interface TickerInfo {
 }
 
 export const TIMEFRAMES: TimeframeOption[] = [
-  { label: '1分', apiInterval: '1m', htfInterval: '5m', sec: 60 },
-  { label: '3分', apiInterval: '3m', htfInterval: '15m', sec: 180 },
-  { label: '5分', apiInterval: '5m', htfInterval: '15m', sec: 300 },
-  { label: '15分', apiInterval: '15m', htfInterval: '1h', sec: 900 },
-  { label: '30分', apiInterval: '30m', htfInterval: '1h', sec: 1800 },
-  { label: '1h', apiInterval: '1h', htfInterval: '4h', sec: 3600 },
-  { label: '3h', apiInterval: '1h', htfInterval: '1d', sec: 10800, aggregateCount: 3 },
-  { label: '4h', apiInterval: '4h', htfInterval: '1d', sec: 14400 },
-  { label: '8h', apiInterval: '1h', htfInterval: '3d', sec: 28800, aggregateCount: 8 },
-  { label: '3D', apiInterval: '3d', htfInterval: '1w', sec: 259200 },
-  { label: '18D', apiInterval: '1d', htfInterval: '1w', sec: 1555200, aggregateCount: 18 },
-  { label: 'M', apiInterval: '1M', htfInterval: '1M', sec: 2592000 },
+  { label: '1分',  apiInterval: '1m',  htfInterval: '5m',  sec: 60,      group: '分鐘', pinned: true },
+  { label: '3分',  apiInterval: '3m',  htfInterval: '15m', sec: 180,     group: '分鐘', pinned: false },
+  { label: '5分',  apiInterval: '5m',  htfInterval: '15m', sec: 300,     group: '分鐘', pinned: true },
+  { label: '15M',  apiInterval: '15m', htfInterval: '1h',  sec: 900,     group: '分鐘', pinned: true },
+  { label: '30分', apiInterval: '30m', htfInterval: '1h',  sec: 1800,    group: '分鐘', pinned: false },
+  { label: 'H',    apiInterval: '1h',  htfInterval: '4h',  sec: 3600,    group: '小時', pinned: true },
+  { label: '2H',   apiInterval: '1h',  htfInterval: '4h',  sec: 7200,    group: '小時', pinned: false, aggregateCount: 2 },
+  { label: '3H',   apiInterval: '1h',  htfInterval: '1d',  sec: 10800,   group: '小時', pinned: true,  aggregateCount: 3 },
+  { label: '4H',   apiInterval: '4h',  htfInterval: '1d',  sec: 14400,   group: '小時', pinned: true },
+  { label: '6H',   apiInterval: '1h',  htfInterval: '1d',  sec: 21600,   group: '小時', pinned: false, aggregateCount: 6 },
+  { label: '8H',   apiInterval: '1h',  htfInterval: '3d',  sec: 28800,   group: '小時', pinned: false, aggregateCount: 8 },
+  { label: '12H',  apiInterval: '1h',  htfInterval: '3d',  sec: 43200,   group: '小時', pinned: false, aggregateCount: 12 },
+  { label: 'D',    apiInterval: '1d',  htfInterval: '1w',  sec: 86400,   group: '日週月', pinned: true },
+  { label: '3D',   apiInterval: '3d',  htfInterval: '1w',  sec: 259200,  group: '日週月', pinned: true },
+  { label: '18D',  apiInterval: '1d',  htfInterval: '1w',  sec: 1555200, group: '日週月', pinned: true,  aggregateCount: 18 },
+  { label: 'W',    apiInterval: '1w',  htfInterval: '1M',  sec: 604800,  group: '日週月', pinned: false },
+  { label: 'M',    apiInterval: '1M',  htfInterval: '1M',  sec: 2592000, group: '日週月', pinned: false },
 ];
 
 function makeBarsContinuous(bars: Bar[]): Bar[] {
@@ -348,6 +357,7 @@ export function useMarketData(symbol: string, tf: TimeframeOption, replayCutoffT
     loadedContextRef.current = contextKey;
     setBars([]);
     setBarsHTF([]);
+    setMtfBarsMap({});
     rawBarsRef.current = [];
     isFetchingMoreRef.current = false;
     emptyStreakRef.current = 0;
@@ -373,32 +383,30 @@ export function useMarketData(symbol: string, tf: TimeframeOption, replayCutoffT
         const anchorEndMs = anchor !== null
           ? Math.min(nowMs, (anchor + tf.sec * 80) * 1000)
           : undefined;
+        const curBatches = tf.aggregateCount
+          ? Math.min(16, Math.max(6, Math.ceil(tf.aggregateCount * 1.5)))
+          : 6;
 
-        const [rawCur, rawHtf] = await Promise.all([
-          fetchDeep(symbol, tf.apiInterval, tf.aggregateCount ? Math.min(8, Math.ceil(tf.aggregateCount * 2)) : 6, anchorEndMs),
+        const [rawCur, rawHtf, m15, h1, h4, d1, w1] = await Promise.all([
+          fetchDeep(symbol, tf.apiInterval, curBatches, anchorEndMs),
           fetchDeep(symbol, tf.htfInterval, 1, anchorEndMs),
+          fetchDeep(symbol, '15m', 3, anchorEndMs),
+          fetchDeep(symbol, '1h', 3, anchorEndMs),
+          fetchDeep(symbol, '4h', 3, anchorEndMs),
+          fetchDeep(symbol, '1d', 2, anchorEndMs),
+          fetchDeep(symbol, '1w', 2, anchorEndMs),
         ]);
         if (!cancelled && activeSymbolRef.current === symbol && activeTfRef.current.label === tf.label) {
           rawBarsRef.current = rawCur;
           const finalCur = aggregateBarsByPeriod(rawCur, tf.sec, tf.aggregateCount);
           if (finalCur.length > 0) setBars(finalCur);
           if (rawHtf.length > 0) setBarsHTF(rawHtf);
-        }
-
-        const mtfResults = await Promise.all([
-          fetchDeep(symbol, '15m', 1, anchorEndMs),
-          fetchDeep(symbol, '1h', 1, anchorEndMs),
-          fetchDeep(symbol, '4h', 1, anchorEndMs),
-          fetchDeep(symbol, '1d', 1, anchorEndMs),
-          fetchDeep(symbol, '1w', 1, anchorEndMs),
-        ]);
-        if (!cancelled && activeSymbolRef.current === symbol && activeTfRef.current.label === tf.label) {
           setMtfBarsMap({
-            '15m': mtfResults[0],
-            '1h': mtfResults[1],
-            '4h': mtfResults[2],
-            '1d': mtfResults[3],
-            '1w': mtfResults[4],
+            '15m': m15,
+            '1h': h1,
+            '4h': h4,
+            '1d': d1,
+            '1w': w1,
           });
         }
       } catch {} finally {

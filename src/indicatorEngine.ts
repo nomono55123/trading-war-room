@@ -295,7 +295,10 @@ export function runIndicatorScript(
       'W': '1w', '1w': '1w', '1W': '1w',
     };
     const k = mapKey[tfCode];
-    if (k && mtfBarsMap[k] && mtfBarsMap[k].length >= 15) return mtfBarsMap[k];
+    if (k) {
+      const tfBars = mtfBarsMap[k];
+      return tfBars && tfBars.length >= 15 ? tfBars : [];
+    }
     return bars;
   };
 

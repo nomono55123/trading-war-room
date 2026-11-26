@@ -4,7 +4,7 @@ import {
   PanelRightClose, PanelRightOpen, X, Flag,
   MousePointer2, TrendingUp, Minus, Square, Percent, ArrowUpCircle, ArrowDownCircle,
   Bookmark, Settings2, BarChartHorizontal, Waypoints, Lock, Unlock,
-  Type, Scissors, StepForward, Shuffle
+  Type, Scissors, StepForward, Shuffle, ChevronDown, Star
 } from 'lucide-react';
 import type { IChartApi, ISeriesApi } from 'lightweight-charts';
 import {
@@ -66,7 +66,7 @@ function loadInitialIndicators(): IndicatorScript[] {
 
 export function App() {
   const [symbol, setSymbol] = useState('BTCUSDT');
-  const [tf, setTf] = useState<TimeframeOption>(TIMEFRAMES.find((t) => t.label === '15分') || TIMEFRAMES[0]);
+  const [tf, setTf] = useState<TimeframeOption>(TIMEFRAMES.find((t) => t.label === '15M') || TIMEFRAMES[0]);
   const [replaySelecting, setReplaySelecting] = useState(false);
   const [replayCutoffTime, setReplayCutoffTime] = useState<number | null>(null);
   const [replayPlaying, setReplayPlaying] = useState(false);
@@ -141,9 +141,34 @@ export function App() {
     setReplayPlaying(false);
   }, [symbol]);
 
+  const [tfMenuOpen, setTfMenuOpen] = useState(false);
+  const [pinnedTfLabels, setPinnedTfLabels] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('warroom_pinned_tfs_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return TIMEFRAMES.filter((t) => t.pinned).map((t) => t.label);
+  });
+
+  useEffect(() => {
+    localStorage.setItem('warroom_pinned_tfs_v1', JSON.stringify(pinnedTfLabels));
+  }, [pinnedTfLabels]);
+
+  const togglePinTf = (e: React.MouseEvent, label: string) => {
+    e.stopPropagation();
+    setPinnedTfLabels((prev) =>
+      prev.includes(label) ? prev.filter((x) => x !== label) : [...prev, label]
+    );
+  };
+
   useEffect(() => {
     setReplaySelecting(false);
     setReplayPlaying(false);
+    setIndicatorOutputs([]);
+    lastCalcTimeRef.current = 0;
   }, [tf]);
 
   const visibleBars = useMemo(() => {
@@ -260,8 +285,13 @@ export function App() {
       lastCalcTimeRef.current = Date.now();
       const results: IndicatorOutput[] = [];
       let err = '';
+      const hasMtf = Object.values(visibleMtfMap).some((arr) => Array.isArray(arr) && arr.length >= 15);
       for (const ind of indicators) {
         if (!ind.enabled) continue;
+        if (ind.uiType === 'multilevel' && (ind.multiLevelConfig?.tfMode ?? '固定時框') === '固定時框' && !hasMtf) {
+          results.push({ lines: [], labels: [], plots: [] });
+          continue;
+        }
         try {
           results.push(runIndicatorScript(ind, visibleBars, visibleBarsHTF, visibleMtfMap));
         } catch (e: any) {
@@ -367,12 +397,51 @@ export function App() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-0.5 border-l border-[#2a2e39] pl-2 overflow-x-auto no-scrollbar">
-            {TIMEFRAMES.map((t) => (
-              <button key={t.label} onClick={() => setTf(t)} className={`px-2 py-1 text-xs rounded shrink-0 cursor-pointer ${tf.label === t.label ? 'bg-[#2962ff] text-white font-semibold' : 'hover:bg-[#2a2e39]'}`}>
+          <div className="relative flex items-center gap-0.5 border-l border-[#2a2e39] pl-2">
+            {TIMEFRAMES.filter((t) => pinnedTfLabels.includes(t.label)).map((t) => (
+              <button key={t.label} onClick={() => { setTf(t); setTfMenuOpen(false); }} className={`px-2 py-1 text-xs rounded shrink-0 cursor-pointer ${tf.label === t.label ? 'bg-[#2962ff] text-white font-semibold' : 'hover:bg-[#2a2e39]'}`}>
                 {t.label}
               </button>
             ))}
+            {!pinnedTfLabels.includes(tf.label) && (
+              <button onClick={() => setTfMenuOpen(false)} className="px-2 py-1 text-xs rounded shrink-0 bg-[#2962ff] text-white font-semibold cursor-pointer">
+                {tf.label}
+              </button>
+            )}
+            <button
+              onClick={() => setTfMenuOpen((o) => !o)}
+              className={`p-1 rounded shrink-0 cursor-pointer ${tfMenuOpen ? 'bg-[#2a2e39] text-white' : 'text-[#9598a1] hover:bg-[#2a2e39] hover:text-white'}`}
+              title="更多時間級別（摺疊選單）"
+            >
+              <ChevronDown size={14} />
+            </button>
+            {tfMenuOpen && (
+              <div className="absolute left-2 top-full mt-1.5 w-64 bg-[#1e222d] border border-[#363a45] rounded-md shadow-2xl p-2.5 z-50 text-xs">
+                {(['分鐘', '小時', '日週月'] as const).map((grp, gIdx) => (
+                  <div key={grp} className={gIdx > 0 ? 'mt-2.5 pt-2 border-t border-[#2a2e39]' : ''}>
+                    <div className="text-[11px] text-[#787b86] mb-1.5 px-1">{grp}</div>
+                    <div className="grid grid-cols-3 gap-1">
+                      {TIMEFRAMES.filter((t) => t.group === grp).map((item) => {
+                        const active = tf.label === item.label;
+                        const pinned = pinnedTfLabels.includes(item.label);
+                        return (
+                          <div
+                            key={item.label}
+                            onClick={() => { setTf(item); setTfMenuOpen(false); }}
+                            className={`flex items-center justify-between px-2 py-1 rounded cursor-pointer ${active ? 'bg-[#2962ff] text-white font-semibold' : 'hover:bg-[#2a2e39] text-[#d1d4dc]'}`}
+                          >
+                            <span className="truncate">{item.label}</span>
+                            <button onClick={(e) => togglePinTf(e, item.label)} className="ml-1 shrink-0 cursor-pointer" title={pinned ? '取消釘選' : '釘選到上方列'}>
+                              <Star size={11} className={pinned ? 'text-[#facc15] fill-[#facc15]' : 'text-[#787b86] hover:text-white'} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-1 border-l border-[#2a2e39] pl-2 ml-1 shrink-0">
